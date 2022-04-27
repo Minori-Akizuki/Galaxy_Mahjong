@@ -182,54 +182,52 @@ export class GalaxyMahjongRule extends AMajongRule {
     // まず雀頭をとる
     const _intermediateHand:[IMianzi, MahjongTile[]][] = this.takeDuizi(tiles)
     // 残った手牌から面子をとり続ける
-    /**
-     * 手牌から可能な限り面子を取得しその構成を列挙する
-     * @param intermediateHand [[既に取った面子][残った手牌]]
-     * @returns [[取得した面子][]]
-     */
-    const takeAllMianzi = (
-      intermediateHand:[IMianzi[], MahjongTile[]][]
-    ):[IMianzi[], MahjongTile[]][] => {
-      if (
-        intermediateHand.length === 0 || // 既に成立するパターンが無く全て刈り取られていた場合
-        intermediateHand[0][1].length === 0 // 全ての牌が抜き取られこれ以上とる牌が無い場合(最初に同数の牌が与えられている事が前提)
-      ) {
-        return intermediateHand
-      }
-      // 結果保存用の変数
-      const concatMianzi:[IMianzi[], MahjongTile[]][] = []
-      intermediateHand.forEach(i => {
-        if (i[1].length < 3) {
-          // 面子を取る段階で手牌が3枚以下になった時は数が当ってない
-          throw Error('Illigal hand')
-        }
-        // 残りの手牌から面子のパターンを抽出
-        const takenMianzi = this.takeMianzi(i[1])
-        takenMianzi.forEach(t => {
-          // [[...既にある面子, 今とった面子], [残った手牌]]
-          const candidateHand:[IMianzi[], MahjongTile[]] = [[...i[0], t[0]], t[1]]
-          // 現在取った面子
-          const currentMianzi = candidateHand[0]
-          // 今迄に取った面子の列
-          const existongConcatMianzi = concatMianzi.map(c => c[0])
-          if (
-            existongConcatMianzi
-              .every(
-                ms => !_.equalSetArray(
-                  ms,
-                  currentMianzi,
-                  (a, b) => GalaxyMahjongRule.compareGalaxyMianzi(a, b))
-              )) {
-            // 同一の面子(雀頭)の組み合わせが無い場合のみ結果に追加する
-            concatMianzi.push(candidateHand)
-          }
-        })
-      })
-      return takeAllMianzi(concatMianzi)
-    }
     const intermediateHand:[IMianzi[], MahjongTile[]][] = _intermediateHand.map(i => [[i[0]], i[1]])
-    const arrangedManzi = takeAllMianzi(intermediateHand)
+    const arrangedManzi = this.takeAllXZi(intermediateHand, (ts) => this.takeMianzi(ts))
     return arrangedManzi.map(mt => mt[0])
+  }
+
+  /**
+   * 手牌から可能な限り対子か面子か雀頭を取得し続け、取得可能なパターンを全て列挙する
+   * @param intermediateHand 既に抜いてある面子/雀頭
+   * @param takeXZi 面子を取るか雀頭を取るか
+   * @returns 取得可能な全ての手牌構成の列
+   */
+  private takeAllXZi (
+    intermediateHand:[IMianzi[], MahjongTile[]][], takeXZi:(tiles: MahjongTile[]) => [IMianzi, MahjongTile[]][]
+  ):[IMianzi[], MahjongTile[]][] {
+    if (
+      intermediateHand.length === 0 || // 既に成立するパターンが無く全て刈り取られていた場合
+      intermediateHand[0][1].length === 0 // 全ての牌が抜き取られこれ以上とる牌が無い場合(最初に同数の牌が与えられている事が前提)
+    ) {
+      return intermediateHand
+    }
+    // 結果保存用の変数
+    const concatMianzi:[IMianzi[], MahjongTile[]][] = []
+    intermediateHand.forEach(i => {
+      // 残りの手牌から面子のパターンを抽出
+      const takenXZi = takeXZi(i[1])
+      takenXZi.forEach(t => {
+        // [[...既にある面子, 今とった面子], [残った手牌]]
+        const candidateHand:[IMianzi[], MahjongTile[]] = [[...i[0], t[0]], t[1]]
+        // 現在取った面子
+        const currentMianzi = candidateHand[0]
+        // 今迄に取った面子の列
+        const existongConcatMianzi = concatMianzi.map(c => c[0])
+        if (
+          existongConcatMianzi
+            .every(
+              ms => !_.equalSetArray(
+                ms,
+                currentMianzi,
+                (a, b) => GalaxyMahjongRule.compareGalaxyMianzi(a, b))
+            )) {
+          // 同一の面子(雀頭)の組み合わせが無い場合のみ結果に追加する
+          concatMianzi.push(candidateHand)
+        }
+      })
+    })
+    return this.takeAllXZi(concatMianzi, takeXZi)
   }
 
   /**
@@ -239,6 +237,10 @@ export class GalaxyMahjongRule extends AMajongRule {
    * @returns 考えうる面子/対子と残りの牌の組
    */
   private takeMianziNorm (number: number, tiles: MahjongTile[]):[IMianzi, MahjongTile[]][] {
+    // n 枚無い時は例外を吐く
+    if (tiles.length < number) {
+      throw Error(`Illigal hand: Need ${number} number hand`)
+    }
     // 牌を n 枚抜き出し面子(雀頭)判定をする
     const candidateMianzi = _.extractAllN(
       tiles,
