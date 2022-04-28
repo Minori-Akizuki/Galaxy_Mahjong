@@ -1,4 +1,4 @@
-import { MahjongTile, TileColor } from './rule_base'
+import { MahjongTile, TileColor } from './mahjong_tile'
 
 /**
  * 面子の種類、都合上対子と塔子と国士無双も含む

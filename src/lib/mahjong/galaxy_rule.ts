@@ -1,19 +1,16 @@
-import deepEqual from 'deep-equal'
 import { _ } from '../util/util'
 import { GalaxyTileParser } from './galaxy_tile_parser'
+import { MahjongTile, TileColor } from './mahjong_tile'
 import { IMianzi, MianziKind } from './mianzi'
-import { MahjongTile, AMajongRule, TileColor } from './rule_base'
+import { MahjongRule } from './rule_base'
 
 /**
  * 銀河マージャンルール、シングルトンで提供される
  */
-export class GalaxyMahjongRule extends AMajongRule {
-  public parser:GalaxyTileParser
-  private static _instance: GalaxyMahjongRule
+export class GalaxyMahjongRule extends MahjongRule {
   public NORMAL_TILES:MahjongTile[]
   public RED_TILES:MahjongTile[]
   public GALAXY_TILES:MahjongTile[]
-  public ALL_TILES:MahjongTile[]
 
   private constructor () {
     super()
@@ -25,23 +22,30 @@ export class GalaxyMahjongRule extends AMajongRule {
       ]).map(t => t[0] + t[1]).join('') +
       'wsenblh'
     )
+    // 通常牌に銀河属性をつけたものを銀河牌の一覧として登録する
     this.GALAXY_TILES = this.NORMAL_TILES.map(t => new MahjongTile(t.color, t.number, { isGalaxy: true }))
+    // 赤は伍にだけある
     this.RED_TILES = this.parser.parseTiles('5sr5wr5pr')
     this.ALL_TILES = [...this.NORMAL_TILES, ...this.GALAXY_TILES, ...this.RED_TILES]
   }
 
-  static getInstance (): GalaxyMahjongRule {
-    if (this._instance == null) {
+  static getInstance (): MahjongRule {
+    if (!this._instance) {
       this._instance = new GalaxyMahjongRule()
     }
     return this._instance
+  }
+
+  private static getInstanceAsGalaxyRule ():GalaxyMahjongRule {
+    const instance = GalaxyMahjongRule.getInstance()
+    return instance as GalaxyMahjongRule
   }
 
   public canBeNextTile (tile: MahjongTile, nextTile: MahjongTile):boolean {
     if (
       tile.color === TileColor.feng ||
       tile.color === TileColor.sanyuan ||
-      tile.number === GalaxyMahjongRule.getMaxNumber(tile.color)) {
+      tile.number === this.getMaxNumber(tile.color)) {
       // 字牌、三元牌、9には次の牌は無い
       return false
     }
@@ -87,7 +91,7 @@ export class GalaxyMahjongRule extends AMajongRule {
           // 数牌だった場合は、次の数字の全ての色がドラ
           const dragonNumber = ((
             tile.number %
-            GalaxyMahjongRule.getMaxNumber(tile.color)
+            this.getMaxNumber(tile.color)
           ) + 1).toString()
           return [
             dragonNumber + 'w',
@@ -98,7 +102,7 @@ export class GalaxyMahjongRule extends AMajongRule {
       }
     }
     // ドラ表が普通の牌だった場合
-    const maxDoragonNum = GalaxyMahjongRule.getMaxNumber(tile.color)
+    const maxDoragonNum = this.getMaxNumber(tile.color)
     const dragonNum = (tile.number % maxDoragonNum) + 1
     return [new MahjongTile(tile.color, dragonNum, { })]
   }
@@ -172,271 +176,5 @@ export class GalaxyMahjongRule extends AMajongRule {
       return [{ tiles, kind, number: tiles[0].number, color, isOpend }]
     }
     return []
-  }
-
-  /**
-   * 晒されていない手牌から通常の上がり形(1雀頭n面子)のパターンを列挙する
-   * @param tiles 手牌
-   * @returns 通常の上がり形として考えられる形
-   */
-  private arrangeNormalHand (tiles: MahjongTile[]): IMianzi[][] {
-    // まず雀頭をとる
-    const _intermediateHand:[IMianzi, MahjongTile[]][] = this.takeDuizi(tiles)
-    // [[面子構成], 手牌] の配列に開く
-    const intermediateHand:[IMianzi[], MahjongTile[]][] = _intermediateHand.map(i => [[i[0]], i[1]])
-    // 残った手牌から面子をとり続ける
-    const arrangedManzi = this.takeAllXZi(intermediateHand, (ts) => this.takeMianzi(ts))
-    return arrangedManzi.map(mt => mt[0])
-  }
-
-  /**
-   * 特殊形(七対子、国士無双)の抽出を試みる
-   * @param tiles 手牌
-   * @returns 抽出された面子
-   */
-  private arrangeExceptionalHand (tiles: MahjongTile[]): IMianzi[][] {
-    const role:IMianzi[][] = []
-    role.concat(this.takeQiDuizi(tiles))
-    role.concat(this.takeShisanyao(tiles))
-    return role
-  }
-
-  /**
-   * 手牌から七対子の抽出を試みます
-   * @param tiles 手牌
-   * @returns 七対子が成立したらそのパターン
-   */
-  private takeQiDuizi (tiles:MahjongTile[]): IMianzi[][] {
-    const intermediateHand:[IMianzi[], MahjongTile[]][] = [[[], tiles]]
-    const qiDuizi = this.takeAllXZi(intermediateHand, (ts) => this.takeDuizi(ts))
-    // 対子の抽出しかやってないんだから7個ある確認はしなくていいでしょうというおきもち
-    if (qiDuizi.length > 0) {
-      const duidis = qiDuizi.map(mt => mt[0])
-      const ret:IMianzi[][] = []
-      duidis.forEach(ds => {
-        if (
-          _.makeAllPairsFromHead(ds)
-            .every(([d1, d2]) => !(d1.color === d2.color && d1.number === d2.number))
-        ) {
-          // 全ての対子において色と数の一致が見られなかったら
-          // (not or not の方が見やすいかもしれなかったけどパフォーマンスは多分こっちの方がいい)
-          ret.push(ds)
-        }
-      })
-      return ret
-    }
-    return []
-  }
-
-  /**
-   * 手牌から国士無双の抽出を試みます
-   * @param tiles 手牌
-   * @returns 国士無双が成立すればそのパターン
-   */
-  private takeShisanyao (tiles:MahjongTile[]): IMianzi[][] {
-    const hands:[IMianzi[], MahjongTile][] = []
-    const yaojiuPais = this.parser.parseTiles('1w9w1p9p1s9swsenblh')
-    // 手牌から1牌だけ抽出したパターンを列挙する
-    const candidateRemaingHand = _.extractAllOne(tiles)
-    candidateRemaingHand.forEach(([r, hs]) => {
-      // 残った牌に対して么九牌全ての抜き出しを試みる
-      const extracted = _.extractMultiple(
-        hs.sort((ta, tb) => GalaxyMahjongRule.compareTileByColor(ta, tb)), // ソートされた牌は銀河牌が後にくるので先に銀河牌が抽出される事は無いはず
-        yaojiuPais,
-        (ta, tb) => this.canBeSameTile(ta, tb)
-      )
-      if (
-        extracted.length === 0 && // 么九牌が全て抜き出せて
-        yaojiuPais.findIndex(t => this.canBeSameTile(t, r)) !== -1 && // 残った牌も么九牌
-        hands.every((cr) => !deepEqual(cr[1], r)) // 既に抜き出したやつと同じ牌が余ってない
-      ) {
-        hands.push([
-          [{
-            tiles,
-            kind: MianziKind.shisanyao,
-            number: 1,
-            color: TileColor.wanzi,
-            isOpend: false
-          }],
-          r
-        ])
-      }
-    })
-    return hands.map(r => r[0])
-  }
-
-  /**
-   * 手牌から可能な限り対子か面子か雀頭を取得し続け、取得可能なパターンを全て列挙する
-   * @param intermediateHand 既に抜いてある面子/雀頭
-   * @param takeXZi 面子を取るか雀頭を取るか
-   * @returns 取得可能な全ての手牌構成の列
-   */
-  private takeAllXZi (
-    intermediateHand:[IMianzi[], MahjongTile[]][], takeXZi:(tiles: MahjongTile[]) => [IMianzi, MahjongTile[]][]
-  ):[IMianzi[], MahjongTile[]][] {
-    if (
-      intermediateHand.length === 0 || // 既に成立するパターンが無く全て刈り取られていた場合
-      intermediateHand[0][1].length === 0 // 全ての牌が抜き取られこれ以上とる牌が無い場合(最初に同数の牌が与えられている事が前提)
-    ) {
-      return intermediateHand
-    }
-    // 結果保存用の変数
-    const concatMianzi:[IMianzi[], MahjongTile[]][] = []
-    intermediateHand.forEach(i => {
-      // 残りの手牌から面子のパターンを抽出
-      const takenXZi = takeXZi(i[1])
-      takenXZi.forEach(t => {
-        // [[...既にある面子, 今とった面子], [残った手牌]]
-        const candidateHand:[IMianzi[], MahjongTile[]] = [[...i[0], t[0]], t[1]]
-        // 現在取った面子
-        const currentMianzi = candidateHand[0]
-        // 今迄に取った面子の列
-        const existongConcatMianzi = concatMianzi.map(c => c[0])
-        if (
-          existongConcatMianzi
-            .every(
-              ms => !_.equalSetArray(
-                ms,
-                currentMianzi,
-                (a, b) => GalaxyMahjongRule.compareGalaxyMianzi(a, b))
-            )) {
-          // 同一の面子(雀頭)の組み合わせが無い場合のみ結果に追加する
-          concatMianzi.push(candidateHand)
-        }
-      })
-    })
-    return this.takeAllXZi(concatMianzi, takeXZi)
-  }
-
-  /**
-   * 手牌から n 枚で構成される面子/対子を抜き出した全てのパターンを返却する
-   * @param number 抜き出す枚数、対子なら2枚、など
-   * @param tiles 手牌
-   * @returns 考えうる面子/対子と残りの牌の組
-   */
-  private takeMianziNorm (number: number, tiles: MahjongTile[]):[IMianzi, MahjongTile[]][] {
-    // n 枚無い時は例外を吐く
-    if (tiles.length < number) {
-      throw Error(`Illigal hand: Need ${number} number hand`)
-    }
-    // 牌を n 枚抜き出し面子(雀頭)判定をする
-    const candidateMianzi = _.extractAllN(
-      tiles,
-      number,
-      GalaxyMahjongRule.compareTileByNumber
-    )
-    // 抜き出した物が面子/対子か判定し、成立しなかったものは排除する
-    const _mianzis = candidateMianzi
-      .map((t:[MahjongTile[], MahjongTile[]]):[IMianzi[], MahjongTile[]] => [this.makeMianzi(t[0], false), t[1]])
-      .filter((t:[IMianzi[], MahjongTile[]]) => t[0].length !== 0)
-    // 銀河牌により複数の候補がある面子構成を開いて別々にする
-    // [[m1, m2, m3], Ts] -> [[m1, Ts], [m2, Ts], [m3, Ts]]
-    const mianzis:[IMianzi, MahjongTile[]][] = []
-    _mianzis.forEach(_m => {
-      const remaingTile = _m[1]
-      _m[0].forEach(mianzi => {
-        mianzis.push([mianzi, remaingTile])
-      })
-    })
-    return mianzis
-  }
-
-  /**
-   * 手牌から対子を抜き出せるパターンを列挙する
-   * @param tiles 手牌
-   * @returns 対子と残りの牌の組
-   */
-  private takeDuizi (tiles: MahjongTile[]):[IMianzi, MahjongTile[]][] {
-    return this.takeMianziNorm(2, tiles)
-  }
-
-  /**
-   * 手牌から面子を抜き出せるパターンを列挙する
-   * @param tiles 手牌
-   * @returns 面子と残りの牌の組
-   */
-  private takeMianzi (tiles: MahjongTile[]):[IMianzi, MahjongTile[]][] {
-    return this.takeMianziNorm(3, tiles)
-  }
-
-  // static Method
-
-  static getMaxNumber (color: TileColor): number {
-    switch (color) {
-      case TileColor.wanzi:
-      case TileColor.siozi:
-      case TileColor.tongzi:
-        return 9
-      case TileColor.feng:
-        return 4
-      case TileColor.sanyuan:
-        return 3
-    }
-    throw Error(`Invalid color ${TileColor[color]}`)
-  }
-
-  static compareTileByNumber (tileA:MahjongTile, tileB:MahjongTile):number {
-    // 数の比較
-    const diffNumber = tileA.number - tileB.number
-    if (diffNumber !== 0) {
-      return diffNumber
-    }
-    // 色の比較
-    const diffColor = tileA.color - tileB.color
-    if (diffColor !== 0) {
-      return diffColor
-    }
-    // 赤と銀河が同時についている事はないが、赤を先に判定する
-    // オプションついている方が先
-    if (tileA.option.isRed && !tileB.option.isRed) {
-      return 1
-    }
-    if (!tileA.option.isRed && tileB.option.isRed) {
-      return -1
-    }
-    if (tileA.option.isGalaxy && !tileB.option.isGalaxy) {
-      return 1
-    }
-    if (!tileA.option.isGalaxy && tileB.option.isGalaxy) {
-      return -1
-    }
-    return 0
-  }
-
-  static compareTileByColor (tileA:MahjongTile, tileB:MahjongTile):number {
-    // 色の比較
-    const diffColor = tileA.color - tileB.color
-    if (diffColor !== 0) {
-      return diffColor
-    }
-    // 数の比較
-    const diffNumber = tileA.number - tileB.number
-    if (diffNumber !== 0) {
-      return diffNumber
-    }
-    // 赤と銀河が同時についている事はないが、赤を先に判定する
-    // オプションついている方が先
-    if (tileA.option.isRed && !tileB.option.isRed) {
-      return 1
-    }
-    if (!tileA.option.isRed && tileB.option.isRed) {
-      return -1
-    }
-    if (tileA.option.isGalaxy && !tileB.option.isGalaxy) {
-      return 1
-    }
-    if (!tileA.option.isGalaxy && tileB.option.isGalaxy) {
-      return -1
-    }
-    return 0
-  }
-
-  private static compareGalaxyMianzi = (ma:IMianzi, mb:IMianzi):number => {
-    const compareMember =
-      ma.kind - mb.kind ||
-      ma.color - mb.color ||
-      ma.number - mb.number ||
-      _.compareArray(ma.tiles, mb.tiles, GalaxyMahjongRule.compareTileByNumber)
-    return compareMember
   }
 }

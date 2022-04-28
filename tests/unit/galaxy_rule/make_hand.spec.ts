@@ -2,9 +2,9 @@
 // private method のテストをしているため dot-notation はオフにしておく
 
 import { GalaxyMahjongRule } from '@/lib/mahjong/galaxy_rule'
-import { galaxyMianziToString, MianziKind } from '@/lib/mahjong/mianzi'
+import { MianziKind } from '@/lib/mahjong/mianzi'
 
-const GALAXY_RULE = GalaxyMahjongRule.getInstance()
+const GALAXY_RULE = GalaxyMahjongRule['getInstanceAsGalaxyRule']()
 const parseTiles = (str:string) => GALAXY_RULE.parser.parseTiles(str)
 
 describe('手牌からの抜き出し', () => {

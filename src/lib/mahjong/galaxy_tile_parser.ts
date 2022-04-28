@@ -1,7 +1,7 @@
 import { MahjongTileParserBase } from './parse_tile'
 
 export class GalaxyTileParser extends MahjongTileParserBase {
-  static _instance:GalaxyTileParser
+  private static _galaxyTileParserInstance:GalaxyTileParser
   private constructor () {
     super(
       MahjongTileParserBase.tileMap.numberdTileMap,
@@ -16,9 +16,9 @@ export class GalaxyTileParser extends MahjongTileParserBase {
   }
 
   static getInstance ():GalaxyTileParser {
-    if (!this._instance) {
-      this._instance = new GalaxyTileParser()
+    if (!this._galaxyTileParserInstance) {
+      this._galaxyTileParserInstance = new GalaxyTileParser()
     }
-    return this._instance
+    return this._galaxyTileParserInstance
   }
 }

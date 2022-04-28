@@ -1,6 +1,6 @@
 import { GalaxyMahjongRule } from '@/lib/mahjong/galaxy_rule'
+import { TileColor } from '@/lib/mahjong/mahjong_tile'
 import { MianziKind } from '@/lib/mahjong/mianzi'
-import { TileColor } from '@/lib/mahjong/rule_base'
 
 const GALAXY_RULE = GalaxyMahjongRule.getInstance()
 const parseTiles = (str:string) => GALAXY_RULE.parser.parseTiles(str)

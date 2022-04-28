@@ -1,5 +1,5 @@
 import { GalaxyMahjongRule } from '@/lib/mahjong/galaxy_rule'
-import { MahjongTile, TileColor } from '@/lib/mahjong/rule_base'
+import { MahjongTile, TileColor } from '@/lib/mahjong/mahjong_tile'
 
 const GALAXY_RULE = GalaxyMahjongRule.getInstance()
 

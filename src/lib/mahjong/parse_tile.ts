@@ -1,4 +1,4 @@
-import { MahjongTile, TileColor } from './rule_base'
+import { MahjongTile, TileColor } from './mahjong_tile'
 
 export interface MahjongTileParserBase {
   parseTileFromString(str:string):MahjongTile
@@ -7,10 +7,11 @@ export interface MahjongTileParserBase {
 
 /**
  * 文字列から牌を生成するパーサー。
- * シングルトンで提供されるのが前提のため、そのような実装をすること。
+ * 継承先のクラスはシングルトンで提供されるのが前提のため、
+ * そのような実装をすること。
  */
 export class MahjongTileParserBase {
-  private regexString:string
+  protected regexString:string
 
   static tileMap = {
     numberdTileMap: {
@@ -40,7 +41,7 @@ export class MahjongTileParserBase {
     option: {}
   }
 
-  public constructor (
+  protected constructor (
     readonly numberdTileMap:{[name:string]: {color:TileColor, maxNumber:number}},
     readonly symboledTileMap:{[name:string]: {color:TileColor, number:number}},
     readonly optionMap:{[name:string]: string}) {
