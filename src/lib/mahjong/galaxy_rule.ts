@@ -11,6 +11,7 @@ export class GalaxyMahjongRule extends MahjongRule {
   public NORMAL_TILES:MahjongTile[]
   public RED_TILES:MahjongTile[]
   public GALAXY_TILES:MahjongTile[]
+  private static galaxyInstance:MahjongRule
 
   private constructor () {
     super()
@@ -30,10 +31,10 @@ export class GalaxyMahjongRule extends MahjongRule {
   }
 
   static getInstance (): MahjongRule {
-    if (!this._instance) {
-      this._instance = new GalaxyMahjongRule()
+    if (!GalaxyMahjongRule.galaxyInstance) {
+      GalaxyMahjongRule.galaxyInstance = new GalaxyMahjongRule()
     }
-    return this._instance
+    return GalaxyMahjongRule.galaxyInstance
   }
 
   private static getInstanceAsGalaxyRule ():GalaxyMahjongRule {
