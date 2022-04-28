@@ -5,61 +5,15 @@ import { IMianzi, MianziKind } from './mianzi'
 import { MahjongTileParserBase } from './parse_tile'
 
 /**
- * 麻雀ルールのアブストラクトクラス、シングルトンで提供されるのが前提
- */
-export abstract class AMahjongRule {
-  /**
-   * tile と expect が同じ牌になれるか
-   * @param tile 牌
-   * @param expect 牌
-   */
-  abstract canBeSameTile(tile:MahjongTile, expect:MahjongTile):boolean
-  /**
-   * nextTile が tile の次の牌になれるか
-   * @param tile 牌
-   * @param nextTile 次の牌
-   */
-  abstract canBeNextTile(tile:MahjongTile, nextTile:MahjongTile):boolean
-  /**
-   * 渡された牌がドラ表になった時のドラを呈示する
-   * @param tile ドラ表
-   * @returns ドラになる牌の配列
-   */
-  abstract deriveDragon(tile:MahjongTile):MahjongTile[]
-  /**
-   * 与えられた牌(2つから4つ)から面子もしくは雀頭を作る
-   * @param tiles 面子にしたい牌
-   * @param isOpend 鳴いた牌かどうか
-   * @returns 面子となりうるパターンの配列
-   */
-  abstract makeMianzi(tiles:MahjongTile[], isOpend:boolean):IMianzi[]
-  /**
-   * 与えられた牌を数字優先で比較する
-   * @param tileA 牌
-   * @param tileB 牌
-   * @returns tileAの方が先であれば負の数、tileBの方が先であれば正の数
-   */
-  abstract compareTileByNumber (tileA:MahjongTile, tileB:MahjongTile):number
-  /**
-   * 与えられた牌を色優先で比較する
-   * @param tileA 牌
-   * @param tileB 牌
-   * @returns tileAの方が先であれば負の数、tileBの方が先であれば正の数
-   */
-  abstract compareTileByColor (tileA:MahjongTile, tileB:MahjongTile):number
-}
-
-/**
  * 麻雀ルール、シングルトンで提供される。
  * ベースクラスのためかなり手抜き
  */
-export class MahjongRule extends AMahjongRule {
+export class MahjongRule {
   public parser:MahjongTileParserBase
   protected static _instance: MahjongRule
   protected ALL_TILES:MahjongTile[]
 
   protected constructor () {
-    super()
     this.parser = MahjongTileParser.getInstance()
     this.ALL_TILES = this.parser.parseTiles(
       _.formation([
@@ -85,22 +39,49 @@ export class MahjongRule extends AMahjongRule {
     return this.ALL_TILES
   }
 
+  /**
+   * tile と expect が同じ牌になれるか
+   * @param tile 牌
+   * @param expect 牌
+   */
   public canBeSameTile (tile: MahjongTile, expect: MahjongTile): boolean {
     throw Error('canBeSameTile: Not Implimented')
   }
 
+  /**
+   * nextTile が tile の次の牌になれるか
+   * @param tile 牌
+   * @param nextTile 次の牌
+   */
   public canBeNextTile (tile: MahjongTile, nextTile: MahjongTile): boolean {
     throw Error('canBeNextTile: Not Implimented')
   }
 
+  /**
+   * 渡された牌がドラ表になった時のドラを呈示する
+   * @param tile ドラ表
+   * @returns ドラになる牌の配列
+   */
   public deriveDragon (tile: MahjongTile): MahjongTile[] {
     throw Error('deriveDragon: Not Implimented')
   }
 
+  /**
+   * 与えられた牌(2つから4つ)から面子もしくは雀頭を作る
+   * @param tiles 面子にしたい牌
+   * @param isOpend 鳴いた牌かどうか
+   * @returns 面子となりうるパターンの配列
+   */
   public makeMianzi (tiles: MahjongTile[], isOpend: boolean): IMianzi[] {
     throw Error('makeMianzi: Not Implimented')
   }
 
+  /**
+   * 与えられた牌を数字優先で比較する
+   * @param tileA 牌
+   * @param tileB 牌
+   * @returns tileAの方が先であれば負の数、tileBの方が先であれば正の数
+   */
   public compareTileByNumber (tileA:MahjongTile, tileB:MahjongTile):number {
     // 数の比較
     const diffNumber = tileA.number - tileB.number
@@ -126,6 +107,12 @@ export class MahjongRule extends AMahjongRule {
     return optionCompare
   }
 
+  /**
+   * 与えられた牌を色優先で比較する
+   * @param tileA 牌
+   * @param tileB 牌
+   * @returns tileAの方が先であれば負の数、tileBの方が先であれば正の数
+   */
   public compareTileByColor (tileA:MahjongTile, tileB:MahjongTile):number {
     // 色の比較
     const diffColor = tileA.color - tileB.color
