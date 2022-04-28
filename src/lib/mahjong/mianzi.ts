@@ -1,7 +1,7 @@
 import { MahjongTile, TileColor } from './rule_base'
 
 /**
- * 面子の種類
+ * 面子の種類、都合上対子と塔子と国士無双も含む
  */
 export enum MianziKind {
   /** 順子 */
@@ -13,11 +13,13 @@ export enum MianziKind {
   /** 対子 */
   'duizi',
   /** 塔子 */
-  'tazi'
+  'tazi',
+  /** 国士形 */
+  'shisanyao'
 }
 
 /**
- * 面子一般を示すインターフェイス、対子も含める。
+ * 面子一般を示すインターフェイス、対子も含める。国士の場合は牌以外は適当な値が入る
  */
 export interface IMianzi {
   /** 実際の牌 */
@@ -35,6 +37,9 @@ export interface IMianzi {
 export const galaxyMianziToString = (m:IMianzi):string => {
   let str = ''
   str = m.tiles.map(t => t.toString()).join('')
+  if (m.kind === MianziKind.shisanyao) {
+    return str
+  }
   if (m.isOpend) {
     str = '(' + str + ')'
   }

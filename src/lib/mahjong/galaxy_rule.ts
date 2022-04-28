@@ -1,3 +1,4 @@
+import deepEqual from 'deep-equal'
 import { _ } from '../util/util'
 import { GalaxyTileParser } from './galaxy_tile_parser'
 import { IMianzi, MianziKind } from './mianzi'
@@ -181,10 +182,87 @@ export class GalaxyMahjongRule extends AMajongRule {
   private arrangeNormalHand (tiles: MahjongTile[]): IMianzi[][] {
     // まず雀頭をとる
     const _intermediateHand:[IMianzi, MahjongTile[]][] = this.takeDuizi(tiles)
-    // 残った手牌から面子をとり続ける
+    // [[面子構成], 手牌] の配列に開く
     const intermediateHand:[IMianzi[], MahjongTile[]][] = _intermediateHand.map(i => [[i[0]], i[1]])
+    // 残った手牌から面子をとり続ける
     const arrangedManzi = this.takeAllXZi(intermediateHand, (ts) => this.takeMianzi(ts))
     return arrangedManzi.map(mt => mt[0])
+  }
+
+  /**
+   * 特殊形(七対子、国士無双)の抽出を試みる
+   * @param tiles 手牌
+   * @returns 抽出された面子
+   */
+  private arrangeExceptionalHand (tiles: MahjongTile[]): IMianzi[][] {
+    const role:IMianzi[][] = []
+    role.concat(this.takeQiDuizi(tiles))
+    role.concat(this.takeShisanyao(tiles))
+    return role
+  }
+
+  /**
+   * 手牌から七対子の抽出を試みます
+   * @param tiles 手牌
+   * @returns 七対子が成立したらそのパターン
+   */
+  private takeQiDuizi (tiles:MahjongTile[]): IMianzi[][] {
+    const intermediateHand:[IMianzi[], MahjongTile[]][] = [[[], tiles]]
+    const qiDuizi = this.takeAllXZi(intermediateHand, (ts) => this.takeDuizi(ts))
+    // 対子の抽出しかやってないんだから7個ある確認はしなくていいでしょうというおきもち
+    if (qiDuizi.length > 0) {
+      const duidis = qiDuizi.map(mt => mt[0])
+      const ret:IMianzi[][] = []
+      duidis.forEach(ds => {
+        if (
+          _.makeAllPairsFromHead(ds)
+            .every(([d1, d2]) => !(d1.color === d2.color && d1.number === d2.number))
+        ) {
+          // 全ての対子において色と数の一致が見られなかったら
+          // (not or not の方が見やすいかもしれなかったけどパフォーマンスは多分こっちの方がいい)
+          ret.push(ds)
+        }
+      })
+      return ret
+    }
+    return []
+  }
+
+  /**
+   * 手牌から国士無双の抽出を試みます
+   * @param tiles 手牌
+   * @returns 国士無双が成立すればそのパターン
+   */
+  private takeShisanyao (tiles:MahjongTile[]): IMianzi[][] {
+    const hands:[IMianzi[], MahjongTile][] = []
+    const yaojiuPais = this.parser.parseTiles('1w9w1p9p1s9swsenblh')
+    // 手牌から1牌だけ抽出したパターンを列挙する
+    const candidateRemaingHand = _.extractAllOne(tiles)
+    candidateRemaingHand.forEach(([r, hs]) => {
+      // 残った牌に対して么九牌全ての抜き出しを試みる
+      const extracted = _.extractMultiple(
+        hs.sort((ta, tb) => GalaxyMahjongRule.compareTileByColor(ta, tb)), // ソートされた牌は銀河牌が後にくるので先に銀河牌が抽出される事は無いはず
+        yaojiuPais,
+        (ta, tb) => this.canBeSameTile(ta, tb)
+      )
+      if (
+        extracted.length === 0 && // 么九牌が全て抜き出せて
+        yaojiuPais.findIndex(t => this.canBeSameTile(t, r)) !== -1 && // 残った牌も么九牌
+        hands.every((cr) => !deepEqual(cr[1], r)) // 既に抜き出したやつと同じ牌が余ってない
+      ) {
+        hands.push([
+          [{
+            tiles,
+            kind: MianziKind.shisanyao,
+            number: 1,
+            color: TileColor.wanzi,
+            isOpend: false
+          }],
+          r
+        ])
+      }
+    })
+    return hands.map(r => r[0])
   }
 
   /**

@@ -11,7 +11,7 @@ describe('牌ソート確認', () => {
     const expectTile = [s1, s1g, w, b, p2, s, l, w3, e, h, n, p5, p5r]
     const tiles = [p5r, p5, s1g, p2, w3, s1, w, s, e, n, b, l, h]
     tiles.sort(GalaxyMahjongRule.compareTileByNumber)
-    console.log(tiles.map(t => t.toString()).join(','))
+    // console.log(tiles.map(t => t.toString()).join(','))
     tiles.forEach((t, i) => {
       expect(t).toMatchObject(expectTile[i])
     })
@@ -22,7 +22,7 @@ describe('牌ソート確認', () => {
     const expectTile = [w3, p2, p5, p5r, s1, s1g, w, s, e, n, b, l, h]
     const tiles = [p5r, p5, s1g, h, l, b, w, s, e, n, p2, w3, s1]
     tiles.sort(GalaxyMahjongRule.compareTileByColor)
-    console.log(tiles.map(t => t.toString()).join(','))
+    // console.log(tiles.map(t => t.toString()).join(','))
     tiles.forEach((t, i) => {
       expect(t).toMatchObject(expectTile[i])
     })
