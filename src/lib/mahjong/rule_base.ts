@@ -50,7 +50,8 @@ export abstract class AMahjongRule {
 }
 
 /**
- * 麻雀ルール、シングルトンで提供される
+ * 麻雀ルール、シングルトンで提供される。
+ * ベースクラスのためかなり手抜き
  */
 export class MahjongRule extends AMahjongRule {
   public parser:MahjongTileParserBase
@@ -150,6 +151,12 @@ export class MahjongRule extends AMahjongRule {
     return optionCompare
   }
 
+  /**
+   * 面子同士の比較。一意性があればなんでもいい。
+   * @param ma 面子
+   * @param mb 面子
+   * @returns 比較結果
+   */
   public compareMianzi = (ma:IMianzi, mb:IMianzi):number => {
     const compareMember =
       ma.kind - mb.kind ||
@@ -348,6 +355,11 @@ export class MahjongRule extends AMahjongRule {
     return hands.map(r => r[0])
   }
 
+  /**
+   * 各色牌の最大数。ドラ等に使用する。
+   * @param color 牌色、風牌と三元牌は分ける
+   * @returns その色の最大数
+   */
   protected getMaxNumber (color: TileColor): number {
     switch (color) {
       case TileColor.wanzi:
@@ -363,6 +375,9 @@ export class MahjongRule extends AMahjongRule {
   }
 }
 
+/**
+ * 牌オブジェクトを文字列から生成するユーティリティ
+ */
 class MahjongTileParser extends MahjongTileParserBase {
   private static _instance:MahjongTileParser
   private constructor () {
