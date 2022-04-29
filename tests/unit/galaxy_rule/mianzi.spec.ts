@@ -1,6 +1,7 @@
+/* eslint dot-notation:off */
 import { GalaxyMahjongRule } from '@/lib/mahjong/galaxy_rule'
 import { TileColor } from '@/lib/mahjong/mahjong_tile'
-import { MianziKind } from '@/lib/mahjong/mianzi'
+import { MianziKind, waitForm } from '@/lib/mahjong/mianzi'
 
 const GALAXY_RULE = GalaxyMahjongRule.getInstance()
 const parseTiles = (str:string) => GALAXY_RULE.parser.parseTiles(str)
@@ -269,5 +270,128 @@ describe('面子判定', () => {
     expect(shunzi5Color).toContain(TileColor.wanzi)
     // 順子の頭が狂ってないか
     expect(shunzi5.map(m => m.number).every(n => n === 1)).toBeTruthy()
+  })
+
+  it('単騎抽出/通常牌', () => {
+    const [s1, e, b] = parseTiles('1seb')
+    // 数牌
+    const guli1 = GALAXY_RULE['takeGuli'](s1)
+    expect(guli1.length).toBe(1)
+    expect(guli1[0][0]).toMatchObject({
+      kind: MianziKind.guli,
+      number: 1,
+      color: TileColor.siozi
+    })
+    // 風牌
+    const guli2 = GALAXY_RULE['takeGuli'](e)
+    expect(guli2.length).toBe(1)
+    expect(guli2[0][0]).toMatchObject({
+      kind: MianziKind.guli,
+      number: 3,
+      color: TileColor.feng
+    })
+    //  三元牌
+    const guli3 = GALAXY_RULE['takeGuli'](b)
+    expect(guli3.length).toBe(1)
+    expect(guli3[0][0]).toMatchObject({
+      kind: MianziKind.guli,
+      number: 1,
+      color: TileColor.sanyuan
+    })
+  })
+
+  it('単騎抽出/銀河牌', () => {
+    const [p5g, wg, lg] = parseTiles('5pgwglg')
+    const guli1 = GALAXY_RULE['takeGuli'](p5g)
+    expect(guli1.length).toBe(3)
+    guli1.forEach(g => {
+      expect(g[0].number).toBe(5)
+    })
+    const guli2 = GALAXY_RULE['takeGuli'](wg)
+    expect(guli2.length).toBe(4)
+    guli2.forEach(g => {
+      expect(g[0].color).toBe(TileColor.feng)
+    })
+    const guli3 = GALAXY_RULE['takeGuli'](lg)
+    expect(guli3.length).toBe(3)
+    guli3.forEach(g => {
+      expect(g[0].color).toBe(TileColor.sanyuan)
+    })
+  })
+
+  it('塔子判定/通常牌', () => {
+    const [s1, s2, s3, s4, w, s] = parseTiles('1s2s3s4sws')
+    // 隣同士の牌
+    const tazi1 = GALAXY_RULE.makeTazi([s1, s2])
+    expect(tazi1.length).toBe(1)
+    expect(tazi1[0]).toMatchObject({
+      kind: MianziKind.tazi,
+      number: 1,
+      color: TileColor.siozi
+    })
+    // 嵌張
+    const tazi2 = GALAXY_RULE.makeTazi([s1, s3])
+    expect(tazi2.length).toBe(1)
+    expect(tazi2[0]).toMatchObject({
+      kind: MianziKind.tazi,
+      number: 1,
+      color: TileColor.siozi
+    })
+    // 二つ以上離れた牌は塔子にならない
+    const tazi3 = GALAXY_RULE.makeTazi([s1, s4])
+    expect(tazi3.length).toBe(0)
+    // 字牌は対子にならない
+    const tazi4 = GALAXY_RULE.makeTazi([w, s])
+    expect(tazi4.length).toBe(0)
+  })
+
+  it('対子判定/銀河牌', () => {
+    const [s1, s2g, w3g] = parseTiles('1s2sg3wg')
+    // 片方が通常牌の時はその色になる
+    const tazi1 = GALAXY_RULE.makeTazi([s1, s2g])
+    expect(tazi1.length).toBe(1)
+    expect(tazi1[0]).toMatchObject({
+      kind: MianziKind.tazi,
+      number: 1,
+      color: TileColor.siozi
+    })
+    // 両方が銀河牌の時は3色になる
+    const tazi2 = GALAXY_RULE.makeTazi([s2g, w3g])
+    expect(tazi2.length).toBe(3)
+  })
+
+  it('待ち判定', () => {
+    const [s1, s2, s3, s4, s7, s8, s9, e] = parseTiles('1s2s3s4s7s8s9se')
+    // 辺張待ち
+    const tazi1 = GALAXY_RULE.makeTazi([s1, s2])
+    const [tiles1, form1] = GALAXY_RULE.deriveHuleTileCommon(tazi1)
+    expect(tiles1).toEqual([s3])
+    expect(form1).toBe(waitForm.bianShang)
+    const tazi3 = GALAXY_RULE.makeTazi([s8, s9])
+    const [tiles3, form3] = GALAXY_RULE.deriveHuleTileCommon(tazi3)
+    expect(tiles3).toEqual([s7])
+    expect(form3).toBe(waitForm.bianShang)
+    // 嵌張待ち
+    const tazi2 = GALAXY_RULE.makeTazi([s1, s3])
+    const [tiles2, form2] = GALAXY_RULE.deriveHuleTileCommon(tazi2)
+    expect(tiles2).toEqual([s2])
+    expect(form2).toBe(waitForm.quianZhang)
+    // 両面待ち
+    const tazi4 = GALAXY_RULE.makeTazi([s2, s3])
+    const [tiles4, form4] = GALAXY_RULE.deriveHuleTileCommon(tazi4)
+    expect(tiles4).toEqual([s1, s4])
+    expect(form4).toBe(waitForm.ligngMain)
+    // 双椪待ち
+    const duizi1 = GALAXY_RULE['takeDuizi']([e, e])[0][0]
+    const duizi2 = GALAXY_RULE['takeDuizi']([s3, s3])[0][0]
+    const [tiles5, form5] = GALAXY_RULE.deriveHuleTileCommon([duizi1, duizi2])
+    expect(tiles5).toContainEqual(e)
+    expect(tiles5).toContainEqual(s3)
+    expect(form5).toBe(waitForm.shuangPong)
+    // 単騎待ち
+    const guli1 = GALAXY_RULE['takeGuli'](s1)[0][0]
+    const [tile6, form6] = GALAXY_RULE.deriveHuleTileCommon([guli1])
+    expect(tile6).toEqual([s1])
+    expect(form6).toBe(waitForm.danqi)
   })
 })

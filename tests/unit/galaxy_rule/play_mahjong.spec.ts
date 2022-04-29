@@ -8,5 +8,8 @@ const parser = (str:string) => GALAXY_RULE.parser.parseTiles(str)
 const playMahjong = new PlayMahjong(GALAXY_RULE)
 
 describe('上がり形探索', () => {
+  it('dummy', () => {
+    // nothing todo
+  })
   // 時間がかかりすぎるため一旦廃止
 })

@@ -92,4 +92,9 @@ describe('ユーティリティテスト', () => {
       expect(shuffleArr).toContain(number)
     }
   })
+
+  it('isContained', () => {
+    const arr = [1, 2, 3, 4]
+    expect(_.isContained(arr, 1, (a, b) => a === b)).toBeTruthy()
+  })
 })
