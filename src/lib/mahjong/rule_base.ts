@@ -12,17 +12,15 @@ import { tileMap } from './tile_map'
 export class MahjongRule {
   public parser:MahjongTileParserBase
   protected static _instance: MahjongRule
-  protected ALL_TILES:MahjongTile[]
+  protected ALL_TILE_TYPE:MahjongTile[]
+  protected NORMAL_TILE_TYPE:MahjongTile[]
+  protected ALL_TILE_SET:MahjongTile[]
 
   protected constructor () {
     this.parser = MahjongTileParser.getInstance()
-    this.ALL_TILES = this.parser.parseTiles(
-      _.formation([
-        [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => n.toString()),
-        ['w', 'p', 's']
-      ]).map(t => t[0] + t[1]).join('') +
-      'wsenblh'
-    )
+    this.NORMAL_TILE_TYPE = this.generateNormalTileType()
+    this.ALL_TILE_TYPE = this.NORMAL_TILE_TYPE
+    this.ALL_TILE_SET = this.provisionAllTileSet(this.NORMAL_TILE_TYPE)
   }
 
   /**
@@ -37,7 +35,15 @@ export class MahjongRule {
   }
 
   public getAllTiles ():MahjongTile[] {
-    return this.ALL_TILES
+    return [...this.ALL_TILE_TYPE]
+  }
+
+  public getNormalTiles ():MahjongTile[] {
+    return [...this.NORMAL_TILE_TYPE]
+  }
+
+  public getAllTileSet ():MahjongTile[] {
+    return [...this.ALL_TILE_SET]
   }
 
   /**
@@ -360,6 +366,45 @@ export class MahjongRule {
         return 3
     }
     throw Error(`Invalid color ${TileColor[color]}`)
+  }
+
+  /**
+   * 特殊牌ではない牌の一覧の生成
+   * @returns 使用される通常牌の一覧
+   */
+  protected generateNormalTileType ():MahjongTile[] {
+    const ret:MahjongTile[] = []
+    // 数牌の生成
+    for (const kind in tileMap.numberdTileMap) {
+      for (let number = 1; number <= tileMap.numberdTileMap[kind].maxNumber; number++) {
+        ret.push({
+          color: tileMap.numberdTileMap[kind].color,
+          number,
+          option: {}
+        })
+      }
+    }
+    // 字牌の生成
+    for (const tile in tileMap.symboledTileMap) {
+      ret.push({
+        ...tileMap.symboledTileMap[tile],
+        option: {}
+      })
+    }
+    return ret
+  }
+
+  /**
+   * この麻雀で使用する全ての牌のセットを提供する
+   * @param normalTileType 通常牌の種類
+   * @returns 麻雀で使用する牌全てのセット
+   */
+  protected provisionAllTileSet (normalTileType:MahjongTile[]):MahjongTile[] {
+    // TODO: このクラスの役割じゃない気がしている。多分 PlayMahjong かその派生クラスに移すのが適当。
+    const tileSet:MahjongTile[] = []
+    // 通常牌を4枚ずつ用意する
+    normalTileType.forEach(t => tileSet.push(t, t, t, t))
+    return tileSet
   }
 }
 

@@ -8,26 +8,17 @@ import { MahjongRule } from './rule_base'
  * 銀河マージャンルール、シングルトンで提供される
  */
 export class GalaxyMahjongRule extends MahjongRule {
-  public NORMAL_TILES:MahjongTile[]
-  public RED_TILES:MahjongTile[]
-  public GALAXY_TILES:MahjongTile[]
   private static galaxyInstance:MahjongRule
 
   private constructor () {
     super()
     this.parser = GalaxyTileParser.getInstance()
-    this.NORMAL_TILES = this.parser.parseTiles(
-      _.formation([
-        [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => n.toString()),
-        ['w', 'p', 's']
-      ]).map(t => t[0] + t[1]).join('') +
-      'wsenblh'
-    )
     // 通常牌に銀河属性をつけたものを銀河牌の一覧として登録する
-    this.GALAXY_TILES = this.NORMAL_TILES.map(t => new MahjongTile(t.color, t.number, { isGalaxy: true }))
+    const glaxyTiles = this.NORMAL_TILE_TYPE.map(t => new MahjongTile(t.color, t.number, { isGalaxy: true }))
     // 赤は伍にだけある
-    this.RED_TILES = this.parser.parseTiles('5sr5wr5pr')
-    this.ALL_TILES = [...this.NORMAL_TILES, ...this.GALAXY_TILES, ...this.RED_TILES]
+    const redTiles = this.parser.parseTiles('5sr5wr5pr')
+    this.ALL_TILE_TYPE = [...this.NORMAL_TILE_TYPE, ...glaxyTiles, ...redTiles]
+    this.ALL_TILE_SET = this.provisionAllTileSet(this.NORMAL_TILE_TYPE)
   }
 
   static getInstance (): MahjongRule {
@@ -177,5 +168,34 @@ export class GalaxyMahjongRule extends MahjongRule {
       return [{ tiles, kind, number: tiles[0].number, color, isOpend }]
     }
     return []
+  }
+
+  /**
+   * この麻雀で使用する全ての牌のセットを提供する
+   * @param normalTileType 通常牌の種類
+   * @returns 麻雀で使用する牌全てのセット
+   */
+  protected provisionAllTileSet (normalTileType:MahjongTile[]):MahjongTile[] {
+    const tileSet:MahjongTile[] = []
+    normalTileType.forEach(t => {
+      if (t.number === 5) {
+        // 赤伍は1枚入れる、銀河牌も入れる。
+        tileSet.push(
+          t,
+          t,
+          { color: t.color, number: t.number, option: { isRed: true } },
+          { color: t.color, number: t.number, option: { isGalaxy: true } }
+        )
+      } else {
+        // 全ての牌に銀河牌を1つ入れる
+        tileSet.push(
+          t,
+          t,
+          t,
+          { color: t.color, number: t.number, option: { isGalaxy: true } }
+        )
+      }
+    })
+    return tileSet
   }
 }

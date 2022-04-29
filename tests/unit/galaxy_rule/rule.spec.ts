@@ -8,6 +8,11 @@ describe('インスタンス存在確認', () => {
     expect(GALAXY_RULE).toBeInstanceOf(GalaxyMahjongRule)
     expect(GALAXY_RULE).toBeInstanceOf(MahjongRule)
   })
+
+  it('使用牌の確認', () => {
+    expect(GALAXY_RULE.getNormalTiles().length).toBe(34)
+    expect(GALAXY_RULE.getAllTileSet().length).toBe(136)
+  })
 })
 
 /*

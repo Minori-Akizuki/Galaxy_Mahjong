@@ -1,6 +1,22 @@
 import { TileColor } from './mahjong_tile'
 
-export const tileMap = {
+interface NumberdTile {
+  color: TileColor
+  maxNumber: number
+}
+
+interface SymboledTile {
+  color: TileColor
+  number: number
+}
+
+interface TileMap {
+  numberdTileMap: {[name:string]:NumberdTile}
+  symboledTileMap: {[name:string]:SymboledTile}
+  option: {[name:string]:string}
+}
+
+export const tileMap:TileMap = {
   numberdTileMap: {
     /** 萬子 (wanzi) */
     w: { color: TileColor.wanzi, maxNumber: 9 },
