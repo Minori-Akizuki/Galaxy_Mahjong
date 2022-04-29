@@ -171,9 +171,9 @@ export class MahjongRule {
    * @returns 考えうる面子/対子と残りの牌の組
    */
   protected takeMianziNorm (number: number, tiles: MahjongTile[]):[IMianzi, MahjongTile[]][] {
-    // n 枚無い時は例外を吐く
+    // n 枚無い時は空配列を返す
     if (tiles.length < number) {
-      throw Error(`Illigal hand: Need ${number} number hand`)
+      return []
     }
     // 牌を n 枚抜き出し面子(雀頭)判定をする
     const candidateMianzi = _.extractAllN(
@@ -381,19 +381,12 @@ export class MahjongRule {
     // 数牌の生成
     for (const kind in tileMap.numberdTileMap) {
       for (let number = 1; number <= tileMap.numberdTileMap[kind].maxNumber; number++) {
-        ret.push({
-          color: tileMap.numberdTileMap[kind].color,
-          number,
-          option: {}
-        })
+        ret.push(new MahjongTile(tileMap.numberdTileMap[kind].color, number, {}))
       }
     }
     // 字牌の生成
     for (const tile in tileMap.symboledTileMap) {
-      ret.push({
-        ...tileMap.symboledTileMap[tile],
-        option: {}
-      })
+      ret.push(new MahjongTile(tileMap.symboledTileMap[tile].color, tileMap.symboledTileMap[tile].number, {}))
     }
     return ret
   }

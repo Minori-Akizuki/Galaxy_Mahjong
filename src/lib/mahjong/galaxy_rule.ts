@@ -183,8 +183,8 @@ export class GalaxyMahjongRule extends MahjongRule {
         tileSet.push(
           t,
           t,
-          { color: t.color, number: t.number, option: { isRed: true } },
-          { color: t.color, number: t.number, option: { isGalaxy: true } }
+          new MahjongTile(t.color, t.number, { isRed: true }),
+          new MahjongTile(t.color, t.number, { isGalaxy: true })
         )
       } else {
         // 全ての牌に銀河牌を1つ入れる
@@ -192,7 +192,7 @@ export class GalaxyMahjongRule extends MahjongRule {
           t,
           t,
           t,
-          { color: t.color, number: t.number, option: { isGalaxy: true } }
+          new MahjongTile(t.color, t.number, { isGalaxy: true })
         )
       }
     })
