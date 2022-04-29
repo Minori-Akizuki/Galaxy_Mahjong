@@ -246,4 +246,15 @@ export class _ {
     })
     return _arr
   }
+
+  static shuffleArr<T> (arr:T[]) {
+    const _arr = [...arr]
+    let out:T[] = []
+    for (let index = _arr.length; index >= 0; index--) {
+      const randomIndex = Math.floor(Math.random() * (index + 1))
+      const s = _arr.splice(randomIndex, 1)
+      out = out.concat(s)
+    }
+    return out
+  }
 }

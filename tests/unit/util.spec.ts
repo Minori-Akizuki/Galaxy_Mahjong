@@ -79,4 +79,17 @@ describe('ユーティリティテスト', () => {
     expect(_.extract(arr, 5, equal)).toEqual([1, 2, 3, 4])
     expect(_.extractMultiple(arr, [1, 3], equal)).toEqual([2, 4])
   })
+
+  it('shuffle', () => {
+    const arrLength = 100
+    // 0-99 の配列を生成する
+    const arr = [...Array(arrLength)].map((u, index) => index)
+    const shuffleArr = _.shuffleArr(arr)
+    expect(shuffleArr.length).toBe(arrLength)
+    // 100個もあれば流石に同じ配列になるこたないだろうという楽観的なチェック
+    expect(shuffleArr).not.toEqual(arr)
+    for (let number = arr.length - 1; number >= 0; number--) {
+      expect(shuffleArr).toContain(number)
+    }
+  })
 })
