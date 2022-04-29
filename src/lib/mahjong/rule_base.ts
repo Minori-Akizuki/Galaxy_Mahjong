@@ -279,9 +279,9 @@ export class MahjongRule {
    * @returns 抽出された面子
    */
   private solveExceptionalHand (tiles: MahjongTile[]): IMianzi[][] {
-    const role:IMianzi[][] = []
-    role.concat(this.takeQiDuizi(tiles))
-    role.concat(this.takeShisanyao(tiles))
+    let role:IMianzi[][] = []
+    role = role.concat(this.takeQiDuizi(tiles))
+    role = role.concat(this.takeShisanyao(tiles))
     return role
   }
 
