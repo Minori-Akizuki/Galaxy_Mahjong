@@ -10,7 +10,7 @@ describe('牌ソート確認', () => {
     const expectTile = [s1, s1g, w, b, p2, s, l, w3, e, h, n, p5, p5r]
     const tiles = [p5r, p5, s1g, p2, w3, s1, w, s, e, n, b, l, h]
     tiles.sort(GALAXY_RULE.compareTileByNumber)
-    console.log(tiles.map(t => t.toString()).join(','))
+    // console.log(tiles.map(t => t.toString()).join(','))
     tiles.forEach((t, i) => {
       expect(t).toMatchObject(expectTile[i])
     })
