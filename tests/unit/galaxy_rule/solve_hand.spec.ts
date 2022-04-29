@@ -117,4 +117,11 @@ describe('手牌からの抜き出し', () => {
     */
     expect(hand1.length).toBe(5)
   })
+
+  it('上がり形総合判定', () => {
+    const hand1 = GALAXY_RULE.solveHand(parseTiles('2s2s3s3s4s4s5s5s6s6s7s7s8s8s'))
+    // 258 頭で抜いた形と七対子形が出てくるはず
+    // 個別メソッドのテスト散々やってるしこれできればもうええやろ()
+    expect(hand1.length).toBe(4)
+  })
 })
