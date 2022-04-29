@@ -1,7 +1,7 @@
 import { _ } from '../util/util'
 import { GalaxyTileParser } from './galaxy_tile_parser'
 import { MahjongTile, TileColor } from './mahjong_tile'
-import { IMianzi, MianziKind } from './mianzi'
+import { IMianzi, MianziKind, waitForm } from './mianzi'
 import { MahjongRule } from './rule_base'
 
 /**
@@ -99,26 +99,30 @@ export class GalaxyMahjongRule extends MahjongRule {
     return [new MahjongTile(tile.color, dragonNum, { })]
   }
 
+  /** 全ての牌が銀河牌である */
+  private areAllGalaxy = (tiles: MahjongTile[]):boolean => {
+    return tiles.every((t) => t.option.isGalaxy)
+  }
+
   public makeMianzi (tiles: MahjongTile[], isOpend:boolean): IMianzi[] {
-    if (tiles.length <= 1 || tiles.length >= 5) {
+    if (tiles.length >= 5) {
       // 1枚か5枚以上は面子にならない
       return []
     }
     const numColor = [TileColor.siozi, TileColor.tongzi, TileColor.wanzi]
     /** 与えられた全ての牌が同一視できるか */
     const canBeSameAllTile = (tiles:MahjongTile[]):boolean => {
+      if (tiles.length === 1) {
+        return true
+      }
       return _.everyPairAllPairWith((ta, tb) => this.canBeSameTile(ta, tb), tiles)
     }
-    /** 全ての牌が銀河牌である */
-    const areAllGalaxy = (tiles: MahjongTile[]):boolean => {
-      return tiles.every((t) => t.option.isGalaxy)
-    }
     if (canBeSameAllTile(tiles)) {
-      // 全ての牌が同じ場合(対子か刻子か槓子の場合)
+      // 全ての牌が同じ場合(孤立牌か対子か刻子か槓子の場合)
       // 面子の種類を選択する
-      const kind:MianziKind = [MianziKind.duizi, MianziKind.kezi, MianziKind.kangzi][tiles.length - 2]
+      const kind:MianziKind = [MianziKind.guli, MianziKind.duizi, MianziKind.kezi, MianziKind.kangzi][tiles.length - 1]
 
-      if (areAllGalaxy(tiles)) {
+      if (this.areAllGalaxy(tiles)) {
         // 牌が全部銀河であった場合
         if (numColor.includes(tiles[0].color)) {
           // 牌か数牌だった場合
@@ -155,7 +159,7 @@ export class GalaxyMahjongRule extends MahjongRule {
       _.everyPairAllPairWith((ta, tb) => (ta.option.isGalaxy || tb.option.isGalaxy || ta.color === tb.color), tiles) // 銀河でない牌は全て色が同一である
     ) {
       const kind = MianziKind.shunzi
-      if (areAllGalaxy(tiles)) {
+      if (this.areAllGalaxy(tiles)) {
         // 全ての牌が銀河だったら
         // 3種の色の面子を全て返す
         return numColor.map((color):IMianzi => {
@@ -168,6 +172,44 @@ export class GalaxyMahjongRule extends MahjongRule {
       return [{ tiles, kind, number: tiles[0].number, color, isOpend }]
     }
     return []
+  }
+
+  public makeTazi (tiles:MahjongTile[]): IMianzi[] {
+    const isOpend = false
+    const numColor = [TileColor.siozi, TileColor.tongzi, TileColor.wanzi]
+    if (
+      tiles.length === 2 && // 牌が2枚
+      tiles.every(t => t.color !== TileColor.feng && t.color !== TileColor.sanyuan) && // 字牌ではない
+      (tiles[0].option.isGalaxy || tiles[1].option.isGalaxy || tiles[0].color === tiles[1].color) &&// 二つの牌の色が同一視できるか
+      Math.abs(tiles[0].number - tiles[1].number) <= 2 // ふたつの牌の数差が2以下か
+    ) {
+      const kind = MianziKind.tazi
+      // TODO: 重複したコード群
+      if (this.areAllGalaxy(tiles)) {
+        return numColor.map((color):IMianzi => {
+          return { tiles, kind, number: tiles[0].number, color, isOpend }
+        })
+      }
+      // 通常の牌が入っていた場合
+      // 正当性チェックはこの if 節で行っているためどれかの色をとってくればいい
+      const color = (tiles.find(t => !t.option.isGalaxy) || tiles[0]).color
+      return [{ tiles, kind, number: tiles[0].number, color, isOpend }]
+    }
+    return []
+  }
+
+  /**
+   * 二つの牌が塔子として扱われた最にどの色になるかを判定する。数牌限定。
+   * @param tileA 牌
+   * @param tileB 牌
+   * @returns 想定される牌の色
+   */
+  protected shoudBeTaziColor (tileA:MahjongTile, tileB:MahjongTile):TileColor[] {
+    if (tileA.option.isGalaxy && tileB.option.isGalaxy) {
+      return [TileColor.wanzi, TileColor.tongzi, TileColor.wanzi]
+    }
+    const nonGalaxyTile = tileA.option.isGalaxy ? tileB : tileA
+    return [nonGalaxyTile.color]
   }
 
   /**

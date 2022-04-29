@@ -252,7 +252,7 @@ export class _ {
    * @param arr 配列
    * @returns シャッフルされた配列
    */
-  static shuffleArr<T> (arr:T[]) {
+  static shuffleArr<T> (arr:T[]):T[] {
     const _arr = [...arr]
     let out:T[] = []
     for (let index = _arr.length; index >= 0; index--) {
@@ -261,5 +261,9 @@ export class _ {
       out = out.concat(s)
     }
     return out
+  }
+
+  static isContained<T> (arr:T[], a:T, equal:(arg1:T, arg2:T) => boolean):boolean {
+    return (!(arr.findIndex(x => equal(x, a)) === -1))
   }
 }

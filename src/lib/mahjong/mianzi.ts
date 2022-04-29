@@ -14,8 +14,25 @@ export enum MianziKind {
   'duizi',
   /** 塔子 */
   'tazi',
+  /** 孤立牌 */
+  'guli',
   /** 国士形 */
   'shisanyao'
+}
+
+export enum waitForm {
+  /** 両面 */
+  'ligngMain',
+  /** 嵌張 */
+  'quianZhang',
+  /** 辺張 */
+  'bianShang',
+  /** 単騎 */
+  'danqi',
+  /** 双椪 */
+  'shuangPong',
+  /** そのほか */
+  'others'
 }
 
 /**

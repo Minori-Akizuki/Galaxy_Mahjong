@@ -1,7 +1,7 @@
 import deepEqual from 'deep-equal'
 import { _ } from '../util/util'
 import { MahjongTile, TileColor } from './mahjong_tile'
-import { IMianzi, MianziKind } from './mianzi'
+import { IMianzi, MianziKind, waitForm } from './mianzi'
 import { MahjongTileParserBase } from './parse_tile'
 import { tileMap } from './tile_map'
 
@@ -316,6 +316,45 @@ export class MahjongRule {
     return []
   }
 
+  public deriveHuleTileCommon (ms:IMianzi[]):[MahjongTile[], waitForm] {
+    if (ms.length === 2 && ms[0].kind === MianziKind.duizi && ms[1].kind === MianziKind.duizi) {
+      // 双椪
+      const [m1, m2] = ms
+      const tiles:MahjongTile[] = [
+        new MahjongTile(m1.color, m1.number, {}),
+        new MahjongTile(m2.color, m2.number, {})
+      ]
+      return [tiles, waitForm.shuangPong]
+    }
+    const m = ms[0]
+    if (m.kind === MianziKind.guli) {
+      // 孤立牌(単騎)
+      return [[new MahjongTile(m.color, m.number, {})], waitForm.danqi]
+    }
+    const [t1, t2] = m.tiles
+    if (t1.number + 2 === t2.number) {
+      // 嵌張
+      return [[new MahjongTile(m.color, t1.number + 1, {})], waitForm.quianZhang]
+    }
+    if (t1.number + 1 === t2.number) {
+      // 連続した牌の場合(本当はこの条件いらんけど一応)
+      if (t1.number === 8) { // TODO: マジックナンバーなのが気に食わない
+        return [[new MahjongTile(m.color, t1.number - 1, {})], waitForm.bianShang]
+      }
+      if (t1.number === 1) {
+        return [[new MahjongTile(m.color, t2.number + 1, {})], waitForm.bianShang]
+      }
+      return [
+        [
+          new MahjongTile(m.color, t1.number - 1, {}),
+          new MahjongTile(m.color, t2.number + 1, {})
+        ],
+        waitForm.ligngMain
+      ]
+    }
+    throw Error('deriveHuleTileCommon: Illigal wait form')
+  }
+
   /**
    * 手牌から国士無双の抽出を試みます
    * @param tiles 手牌
@@ -351,6 +390,47 @@ export class MahjongRule {
       }
     })
     return hands.map(r => r[0])
+  }
+
+  /**
+   * 塔子を作成する。数牌限定。
+   * 通常の面子作成に組み込んでしまうとパターンが爆発的に増えてしまうので別にしなければいけない
+   * @param tileA 牌
+   * @param tileB 牌
+   * @returns 塔子
+   */
+  public makeTazi (tiles:MahjongTile[]):IMianzi[] {
+    const [tileA, tileB] = tiles
+    const symboledTileColor = [TileColor.feng, TileColor.sanyuan]
+    const equal = (a:number, b:number) => a === b
+    if (_.isContained(symboledTileColor, tileA.color, equal) || _.isContained(symboledTileColor, tileB.color, equal)) {
+      return []
+    }
+    if (Math.abs(tileA.number - tileB.number) <= 2) {
+      return this.shoudBeTaziColor(tileA, tileB).map(color => {
+        return {
+          tiles: [tileA, tileB],
+          color,
+          number: Math.min(tileA.number, tileB.number),
+          kind: MianziKind.tazi,
+          isOpend: false
+        }
+      })
+    }
+    return []
+  }
+
+  /**
+   * 二つの牌が塔子として扱われた最にどの色になるかを判定する。数牌限定
+   * @param tileA 牌
+   * @param tileB 牌
+   * @returns 想定される色の種類
+   */
+  protected shoudBeTaziColor (tileA:MahjongTile, tileB:MahjongTile):TileColor[] {
+    if (tileA.color === tileB.color) {
+      return [tileA.color]
+    }
+    return []
   }
 
   /**
