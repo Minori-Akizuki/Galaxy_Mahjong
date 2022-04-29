@@ -31,25 +31,25 @@ describe('手牌からの抜き出し', () => {
   })
 
   it('手牌からの抜き出し/通常形/数牌のみ', () => {
-    const hand1 = GALAXY_RULE['arrangeNormalHand'](parseTiles('1s1s2s2s3s3s4s4s'))
+    const hand1 = GALAXY_RULE['solveNormalHand'](parseTiles('1s1s2s2s3s3s4s4s'))
     expect(hand1.length).toBe(2)
-    const hand2 = GALAXY_RULE['arrangeNormalHand'](parseTiles('1s1s2s2s3s3s4s5s'))
+    const hand2 = GALAXY_RULE['solveNormalHand'](parseTiles('1s1s2s2s3s3s4s5s'))
     expect(hand2.length).toBe(0)
-    const head1 = GALAXY_RULE['arrangeNormalHand'](parseTiles('1s1s'))
+    const head1 = GALAXY_RULE['solveNormalHand'](parseTiles('1s1s'))
     expect(head1.length).toBe(1)
   })
 
   it('手牌からの抜き出し/通常形/字牌絡み', () => {
-    const hand1 = GALAXY_RULE['arrangeNormalHand'](parseTiles('bblllhhh'))
+    const hand1 = GALAXY_RULE['solveNormalHand'](parseTiles('bblllhhh'))
     expect(hand1.length).toBe(1)
-    const hand2 = GALAXY_RULE['arrangeNormalHand'](parseTiles('nnsswhhh'))
+    const hand2 = GALAXY_RULE['solveNormalHand'](parseTiles('nnsswhhh'))
     expect(hand2.length).toBe(0)
   })
 
   it('銀河牌がからんだ手牌からの抜き出し/通常形/数牌のみ', () => {
-    const hand1 = GALAXY_RULE['arrangeNormalHand'](parseTiles('1s1wg2s2s3s3s4wg4pg'))
+    const hand1 = GALAXY_RULE['solveNormalHand'](parseTiles('1s1wg2s2s3s3s4wg4pg'))
     expect(hand1.length).toBe(4)
-    const hand2 = GALAXY_RULE['arrangeNormalHand'](parseTiles('1s1wg2s2s3s3s4wg5pg'))
+    const hand2 = GALAXY_RULE['solveNormalHand'](parseTiles('1s1wg2s2s3s3s4wg5pg'))
     expect(hand2.length).toBe(0)
   })
 
@@ -58,7 +58,7 @@ describe('手牌からの抜き出し', () => {
     // コンソール出力してそれっぽい事確かめてからアサーション作成する
 
     // 三元牌
-    const hand1 = GALAXY_RULE['arrangeNormalHand'](parseTiles('bbglllghhhg'))
+    const hand1 = GALAXY_RULE['solveNormalHand'](parseTiles('bbglllghhhg'))
     /*
     console.log('hand1:')
     hand1.forEach(ms => {
@@ -67,7 +67,7 @@ describe('手牌からの抜き出し', () => {
     */
     expect(hand1.length).toBe(12)
     // 風牌
-    const hand2 = GALAXY_RULE['arrangeNormalHand'](parseTiles('ngnsswghhh'))
+    const hand2 = GALAXY_RULE['solveNormalHand'](parseTiles('ngnsswghhh'))
     /*
     console.log('hand2:')
     hand2.forEach(ms => {
@@ -76,7 +76,7 @@ describe('手牌からの抜き出し', () => {
     */
     expect(hand2.length).toBe(3)
     // 三元牌と風牌の混在
-    const hand3 = GALAXY_RULE['arrangeNormalHand'](parseTiles('ngnsswgbhhg'))
+    const hand3 = GALAXY_RULE['solveNormalHand'](parseTiles('ngnsswgbhhg'))
     expect(hand3.length).toBe(0)
   })
 

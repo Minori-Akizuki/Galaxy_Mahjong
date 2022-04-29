@@ -214,7 +214,7 @@ export class MahjongRule {
    * @param takeXZi 面子を取るか雀頭を取るか
    * @returns 取得可能な全ての手牌構成の列
    */
-  protected takeAllXZi (
+  protected takeRecursivelyXZi (
     intermediateHand:[IMianzi[], MahjongTile[]][], takeXZi:(tiles: MahjongTile[]) => [IMianzi, MahjongTile[]][]
   ):[IMianzi[], MahjongTile[]][] {
     if (
@@ -248,7 +248,7 @@ export class MahjongRule {
         }
       })
     })
-    return this.takeAllXZi(concatMianzi, takeXZi)
+    return this.takeRecursivelyXZi(concatMianzi, takeXZi)
   }
 
   /**
@@ -256,13 +256,13 @@ export class MahjongRule {
    * @param tiles 手牌
    * @returns 通常の上がり形として考えられる形
    */
-  protected arrangeNormalHand (tiles: MahjongTile[]): IMianzi[][] {
+  protected solveNormalHand (tiles: MahjongTile[]): IMianzi[][] {
     // まず雀頭をとる
     const _intermediateHand:[IMianzi, MahjongTile[]][] = this.takeDuizi(tiles)
     // [[面子構成], 手牌] の配列に開く
     const intermediateHand:[IMianzi[], MahjongTile[]][] = _intermediateHand.map(i => [[i[0]], i[1]])
     // 残った手牌から面子をとり続ける
-    const arrangedManzi = this.takeAllXZi(intermediateHand, (ts) => this.takeMianzi(ts))
+    const arrangedManzi = this.takeRecursivelyXZi(intermediateHand, (ts) => this.takeMianzi(ts))
     return arrangedManzi.map(mt => mt[0])
   }
 
@@ -271,7 +271,7 @@ export class MahjongRule {
    * @param tiles 手牌
    * @returns 抽出された面子
    */
-  private arrangeExceptionalHand (tiles: MahjongTile[]): IMianzi[][] {
+  private solveExceptionalHand (tiles: MahjongTile[]): IMianzi[][] {
     const role:IMianzi[][] = []
     role.concat(this.takeQiDuizi(tiles))
     role.concat(this.takeShisanyao(tiles))
@@ -285,7 +285,7 @@ export class MahjongRule {
    */
   protected takeQiDuizi (tiles:MahjongTile[]): IMianzi[][] {
     const intermediateHand:[IMianzi[], MahjongTile[]][] = [[[], tiles]]
-    const qiDuizi = this.takeAllXZi(intermediateHand, (ts) => this.takeDuizi(ts))
+    const qiDuizi = this.takeRecursivelyXZi(intermediateHand, (ts) => this.takeDuizi(ts))
     // 対子の抽出しかやってないんだから7個ある確認はしなくていいでしょうというおきもち
     if (qiDuizi.length > 0) {
       const duidis = qiDuizi.map(mt => mt[0])
