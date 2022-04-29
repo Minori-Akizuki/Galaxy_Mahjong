@@ -3,6 +3,7 @@ import { _ } from '../util/util'
 import { MahjongTile, TileColor } from './mahjong_tile'
 import { IMianzi, MianziKind } from './mianzi'
 import { MahjongTileParserBase } from './parse_tile'
+import { tileMap } from './tile_map'
 
 /**
  * 麻雀ルール、シングルトンで提供される。
@@ -369,9 +370,9 @@ class MahjongTileParser extends MahjongTileParserBase {
   private static _instance:MahjongTileParser
   private constructor () {
     super(
-      MahjongTileParserBase.tileMap.numberdTileMap,
-      MahjongTileParserBase.tileMap.symboledTileMap,
-      MahjongTileParserBase.tileMap.option
+      tileMap.numberdTileMap,
+      tileMap.symboledTileMap,
+      tileMap.option
     )
   }
 
