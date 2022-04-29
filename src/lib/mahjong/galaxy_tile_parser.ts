@@ -1,11 +1,12 @@
 import { MahjongTileParserBase } from './parse_tile'
+import { tileMap } from './tile_map'
 
 export class GalaxyTileParser extends MahjongTileParserBase {
   private static _galaxyTileParserInstance:GalaxyTileParser
   private constructor () {
     super(
-      MahjongTileParserBase.tileMap.numberdTileMap,
-      MahjongTileParserBase.tileMap.symboledTileMap,
+      tileMap.numberdTileMap,
+      tileMap.symboledTileMap,
       {
         /** 銀河牌マーカー */
         g: 'isGalaxy',
