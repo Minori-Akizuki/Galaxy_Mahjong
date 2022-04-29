@@ -247,6 +247,11 @@ export class _ {
     return _arr
   }
 
+  /**
+   * 配列をシャッフルする。元の配列は変更されない。
+   * @param arr 配列
+   * @returns シャッフルされた配列
+   */
   static shuffleArr<T> (arr:T[]) {
     const _arr = [...arr]
     let out:T[] = []
