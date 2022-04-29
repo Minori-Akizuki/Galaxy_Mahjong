@@ -258,6 +258,13 @@ export class MahjongRule {
     return this.takeRecursivelyXZi(concatMianzi, takeXZi)
   }
 
+  public solveHand (tiles: MahjongTile[]): IMianzi[][] {
+    return [
+      ...this.solveNormalHand(tiles),
+      ...this.solveExceptionalHand(tiles)
+    ]
+  }
+
   /**
    * 晒されていない手牌から通常の上がり形(1雀頭n面子)のパターンを列挙する
    * @param tiles 手牌
