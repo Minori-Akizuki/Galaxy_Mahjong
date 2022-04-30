@@ -216,6 +216,15 @@ export class MahjongRule {
   }
 
   /**
+   * 牌を単騎扱いする。ここに配列ぶちこむと大変な事になるので1枚しか認めない。
+   * @param tile 牌
+   * @returns 単騎と空配列
+   */
+  protected takeGuli (tile: MahjongTile):[IMianzi, MahjongTile[]][] {
+    return this.takeMianziNorm(1, [tile])
+  }
+
+  /**
    * 手牌から可能な限り対子か面子か雀頭を取得し続け、取得可能なパターンを全て列挙する
    * @param intermediateHand 既に抜いてある面子/雀頭
    * @param takeXZi 面子を取るか雀頭を取るか
@@ -431,6 +440,33 @@ export class MahjongRule {
       return [tileA.color]
     }
     return []
+  }
+
+  /**
+   * 手牌から対子を一つ抽出する
+   * @param tile 手牌
+   * @returns 対子と残りの牌の組の配列
+   */
+  protected takeTazi (hand: MahjongTile[]):[IMianzi, MahjongTile[]][] {
+    const _hand = [...hand]
+    const compare = (ta:MahjongTile, tb:MahjongTile) => this.compareTileByNumber(ta, tb)
+    // 数字順に並べたペアを用意する
+    const sortedHandPairs = _.makeAllPairsFromHead(_hand.sort(compare))
+    // 返却用の変数
+    const ret:[IMianzi, MahjongTile[]][] = []
+
+    sortedHandPairs.forEach(ts => {
+      // 今迄抽出した牌を列挙する
+      const takedTiles = ret.map(([mianzi, tiles]) => mianzi.tiles)
+      if (takedTiles.every(tm => !_.compareArray(tm, ts, compare))) {
+        // 同一牌の組合せが無かったら
+        // 「残りの牌」を生成する
+        const remaingTile = _.extractMultiple(hand, ts, (ta, tb) => compare(ta, tb) === 0)
+        const tazis = this.makeTazi(ts)
+        ret.push(...tazis.map((m:IMianzi):[IMianzi, MahjongTile[]] => [m, remaingTile]))
+      }
+    })
+    return ret
   }
 
   /**

@@ -152,27 +152,39 @@ export class _ {
     n:number,
     compare:(a:T, b:T) => number
   ):[T[], T[]][] {
-    const allOne = this.extractAllOne(arr).map((p: [T, T[]]):[T[], T[]] => [[p[0]], p[1]])
-    if (n === 1) {
-      return allOne
+    return this._extractAllN(arr, n, compare, 0)
+  }
+
+  /**
+   * extractAllN の 被ラップ関数
+   * @param arr 配列
+   * @param n なんこ取ってくるか
+   * @param compare 比較関数
+   * @param startIndex: 取得開始インデックス
+   */
+  static _extractAllN<T> (
+    arr:T[],
+    n:number,
+    compare:(a:T, b:T) => number,
+    startIndex:number
+  ):[T[], T[]][] {
+    if (n === 0) {
+      return [[[], [...arr]]]
     }
-    const store = allOne.flatMap((p) => {
-      const extracted = p[0]
-      const nextExtract = this.extractAllN(p[1], n - 1, compare)
-      return nextExtract.map((p2:[T[], T[]]):[T[], T[]] => [extracted.concat(p2[0]).sort(compare), p2[1]])
-    })
-
     const ret:[T[], T[]][] = []
-
-    store.forEach((sp) => {
-      let included = false
-      ret.forEach((rp) => {
-        included = included || this.equalArray(sp[0], rp[0], compare)
+    for (let index = startIndex; index <= arr.length - n; index++) {
+      const _arr = [...arr]
+      const takenIs = _arr.splice(index, 1)
+      const takenP = this._extractAllN([..._arr], n - 1, compare, index)
+      takenP.forEach(([taken, remaingArr]) => {
+        const _taken:T[] = takenIs.concat(taken)
+        if (ret.every(
+          ([retTaken, remain]) => !(_.compareArray(retTaken.sort(compare), _taken.sort(compare), compare) === 0)
+        )) {
+          ret.push([_taken, remaingArr])
+        }
       })
-      if (!included) {
-        ret.push(sp)
-      }
-    })
+    }
     return ret
   }
 
