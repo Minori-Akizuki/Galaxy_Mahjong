@@ -154,6 +154,7 @@ export class GalaxyMahjongRule extends MahjongRule {
     }
     // 牌が順子の(可能性がある)場合
     if (
+      tiles.every(t => t.color !== TileColor.feng && t.color !== TileColor.sanyuan) && // 字牌ではない
       tiles.length === 3 && // 牌が3枚である
       _.everyPairFromHeadWith((c, n) => this.canBeNextTile(c, n), tiles) && // 3つの牌が並びになっている
       _.everyPairAllPairWith((ta, tb) => (ta.option.isGalaxy || tb.option.isGalaxy || ta.color === tb.color), tiles) // 銀河でない牌は全て色が同一である
@@ -181,7 +182,8 @@ export class GalaxyMahjongRule extends MahjongRule {
       tiles.length === 2 && // 牌が2枚
       tiles.every(t => t.color !== TileColor.feng && t.color !== TileColor.sanyuan) && // 字牌ではない
       (tiles[0].option.isGalaxy || tiles[1].option.isGalaxy || tiles[0].color === tiles[1].color) &&// 二つの牌の色が同一視できるか
-      Math.abs(tiles[0].number - tiles[1].number) <= 2 // ふたつの牌の数差が2以下か
+      Math.abs(tiles[0].number - tiles[1].number) <= 2 && // ふたつの牌の数差が2以下か
+      tiles[0].number !== tiles[1].number // 対子ではない
     ) {
       const kind = MianziKind.tazi
       // TODO: 重複したコード群

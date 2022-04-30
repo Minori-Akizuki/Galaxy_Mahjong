@@ -6,7 +6,7 @@ const parser = (str:string) => GALAXY_RULE.parser.parseTiles(str)
 
 describe('通常形上がり牌探索', () => {
   it('待ち判定', () => {
-    const hand = parser('1s1s2s3s')
+    const hand = parser('ngegn4s5s6s6p5p4wg1wg1w2w3w')
     const wait = GALAXY_RULE.solveHuleTileCommoon(hand)
     wait.forEach(([mianzis, waitTile, _waitForm]) => {
       console.log(

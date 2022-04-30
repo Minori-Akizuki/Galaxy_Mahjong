@@ -433,7 +433,7 @@ export class MahjongRule {
       // 孤立牌(単騎)
       return [[new MahjongTile(m.color, m.number, {})], waitForm.danqi]
     }
-    const [t1, t2] = m.tiles
+    const [t1, t2] = m.tiles.sort(this.compareTileByNumber)
     if (t1.number + 2 === t2.number) {
       // 嵌張
       return [[new MahjongTile(m.color, t1.number + 1, {})], waitForm.quianZhang]
