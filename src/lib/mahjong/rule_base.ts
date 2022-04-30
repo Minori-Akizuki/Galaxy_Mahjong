@@ -234,7 +234,6 @@ export class MahjongRule {
     intermediateHand:[IMianzi[], MahjongTile[]][], takeXZi:(tiles: MahjongTile[]) => [IMianzi, MahjongTile[]][]
   ):[IMianzi[], MahjongTile[]][] {
     if (
-      intermediateHand.length === 0 || // 既に成立するパターンが無く全て刈り取られていた場合
       intermediateHand[0][1].length === 0 // 全ての牌が抜き取られこれ以上とる牌が無い場合(最初に同数の牌が与えられている事が前提)
     ) {
       return intermediateHand
@@ -264,9 +263,19 @@ export class MahjongRule {
         }
       })
     })
+    if (concatMianzi.length === 0) {
+      // これ以上取得が不可能であった場合
+      // 残った牌と一緒に抜いた面子構成を返却する
+      return intermediateHand
+    }
     return this.takeRecursivelyXZi(concatMianzi, takeXZi)
   }
 
+  /**
+   * 手牌から上がり形の算出を行う
+   * @param tiles 手牌
+   * @returns 考えうる面子構成のパターン
+   */
   public solveHand (tiles: MahjongTile[]): IMianzi[][] {
     return [
       ...this.solveNormalHand(tiles),
@@ -286,7 +295,7 @@ export class MahjongRule {
     const intermediateHand:[IMianzi[], MahjongTile[]][] = _intermediateHand.map(i => [[i[0]], i[1]])
     // 残った手牌から面子をとり続ける
     const arrangedManzi = this.takeRecursivelyXZi(intermediateHand, (ts) => this.takeMianzi(ts))
-    return arrangedManzi.map(mt => mt[0])
+    return arrangedManzi.filter(([mianzis, remaindHand]) => remaindHand.length === 0).map(mt => mt[0])
   }
 
   /**
@@ -306,12 +315,12 @@ export class MahjongRule {
   protected takeQiDuizi (tiles:MahjongTile[]): IMianzi[][] {
     const intermediateHand:[IMianzi[], MahjongTile[]][] = [[[], tiles]]
     const qiDuizi = this.takeRecursivelyXZi(intermediateHand, (ts) => this.takeDuizi(ts))
-    // 対子の抽出しかやってないんだから7個ある確認はしなくていいでしょうというおきもち
     if (qiDuizi.length > 0) {
-      const duidis = qiDuizi.map(mt => mt[0])
+      const duidis = qiDuizi.filter(([ds, remaingHand]) => remaingHand.length === 0).map(mt => mt[0])
       const ret:IMianzi[][] = []
       duidis.forEach(ds => {
         if (
+          ds.length === 7 &&
           _.makeAllPairsFromHead(ds)
             .every(([d1, d2]) => !(d1.color === d2.color && d1.number === d2.number))
         ) {
@@ -325,7 +334,91 @@ export class MahjongRule {
     return []
   }
 
-  public deriveHuleTileCommon (ms:IMianzi[]):[MahjongTile[], waitForm] {
+  /**
+   * 手牌から通常形の上がり形と上がり牌を算出する
+   * @param hand 手牌
+   * @returns [抽出された面子, 上がり牌, 待ち形]
+   */
+  public solveHuleTileCommoon (hand:MahjongTile[]):[IMianzi[], MahjongTile[], waitForm][] {
+    return [
+      ...this.solveHuleTileCommonMianziFirst(hand),
+      ...this.solveHuleTileCommonDuiziFirst(hand)
+    ]
+  }
+
+  /**
+   * 待ち牌の検索。面子抜き出し優先で行う
+   * @param hand 手牌
+   * @returns 面子構成、待ち、待ち形 の列
+   */
+  protected solveHuleTileCommonMianziFirst (hand:MahjongTile[]):[IMianzi[], MahjongTile[], waitForm][] {
+    // まずは面子をできるだけ抜く
+    // 同一パターンの刈り取りはこの時点でされている筈
+    const completePartial = this.takeRecursivelyXZi([[[], hand]], (tiles) => this.takeMianzi(tiles))
+    const ret:[IMianzi[], MahjongTile[], waitForm][] = []
+    completePartial.forEach(([takenMianzis, remaingTiles]) => {
+      if (remaingTiles.length === 1) {
+        // 単騎待ちの場合
+        const gulis = this.takeGuli(remaingTiles[0])
+        gulis.forEach(([guli, none]) => {
+          // 単騎待ちの形を配列に追加する
+          const [waitTile, waitForm] = this.deriveHuleTileCommonFromWait([guli])
+          ret.push([[...takenMianzis, guli], waitTile, waitForm])
+        })
+      } else if (remaingTiles.length === 4) {
+        // 4枚残っている場合。双椪か 対子 + 塔子 のはず
+        // 対子の抽出を試みる
+        const triedTakeDuizis = this.takeRecursivelyXZi([[[], remaingTiles]], (tiles) => this.takeDuizi(tiles))
+        triedTakeDuizis.forEach(([mianzis, remaingTiles]) => {
+          // 塔子が残る場合は solveHuleTileCommonDuiziFirst でカバーする
+          if (mianzis.length === 2) {
+            // 双椪待ちの場合
+            // 待ちを算出して配列に追加する
+            const [waitTile, waitForm] = this.deriveHuleTileCommonFromWait(mianzis)
+            ret.push([takenMianzis.concat(mianzis), waitTile, waitForm])
+          }
+        })
+      }
+      return ret
+    })
+    // 最後に結果の列を返す
+    return ret
+  }
+
+  protected solveHuleTileCommonDuiziFirst (hand:MahjongTile[]):[IMianzi[], MahjongTile[], waitForm][] {
+    /**
+     * 塔子をいままで抜いた面子にくっつける
+     * @param takenMianzis 既に抜いた面子
+     * @param tiles 牌(2枚)
+     * @returns 面子構成、待ち牌、待ち形の配列
+     */
+    const conbineMianzisAndTazi = (takenMianzis:IMianzi[], tiles:MahjongTile[]):[IMianzi[], MahjongTile[], waitForm][] => {
+      const ret:[IMianzi[], MahjongTile[], waitForm][] = []
+      const triedMakeTazi = this.makeTazi(tiles)
+      triedMakeTazi.forEach(tazi => {
+        const [waitTile, waitForm] = this.deriveHuleTileCommonFromWait([tazi])
+        ret.push([[...takenMianzis, tazi], waitTile, waitForm])
+      })
+      return ret
+    }
+    // 対子を一つ抜く
+    const takenDuiziPatternsFromHand = this.takeDuizi(hand)
+    const ret:[IMianzi[], MahjongTile[], waitForm][] = []
+    takenDuiziPatternsFromHand.forEach(([duizi, remaindTiles]) => {
+      // 面子を可能な限り取得する
+      const completePartial = this.takeRecursivelyXZi([[[duizi], remaindTiles]], (tiles) => this.takeMianzi(tiles))
+      completePartial.forEach(([mianzis, remaindTiles]) => {
+        if (remaindTiles.length === 2) {
+          // 残ってる牌が2枚だった場合
+          // 塔子の生成を試みる
+          ret.push(...conbineMianzisAndTazi(mianzis, remaindTiles))
+        }
+      })
+    })
+    return ret
+  }
+
+  public deriveHuleTileCommonFromWait (ms:IMianzi[]):[MahjongTile[], waitForm] {
     if (ms.length === 2 && ms[0].kind === MianziKind.duizi && ms[1].kind === MianziKind.duizi) {
       // 双椪
       const [m1, m2] = ms
@@ -415,7 +508,7 @@ export class MahjongRule {
     if (_.isContained(symboledTileColor, tileA.color, equal) || _.isContained(symboledTileColor, tileB.color, equal)) {
       return []
     }
-    if (Math.abs(tileA.number - tileB.number) <= 2) {
+    if (Math.abs(tileA.number - tileB.number) <= 2 && tileA.number !== tileB.number) {
       return this.shoudBeTaziColor(tileA, tileB).map(color => {
         return {
           tiles: [tileA, tileB],

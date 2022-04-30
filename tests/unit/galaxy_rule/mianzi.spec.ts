@@ -364,33 +364,33 @@ describe('面子判定', () => {
     const [s1, s2, s3, s4, s7, s8, s9, e] = parseTiles('1s2s3s4s7s8s9se')
     // 辺張待ち
     const tazi1 = GALAXY_RULE.makeTazi([s1, s2])
-    const [tiles1, form1] = GALAXY_RULE.deriveHuleTileCommon(tazi1)
+    const [tiles1, form1] = GALAXY_RULE.deriveHuleTileCommonFromWait(tazi1)
     expect(tiles1).toEqual([s3])
     expect(form1).toBe(waitForm.bianShang)
     const tazi3 = GALAXY_RULE.makeTazi([s8, s9])
-    const [tiles3, form3] = GALAXY_RULE.deriveHuleTileCommon(tazi3)
+    const [tiles3, form3] = GALAXY_RULE.deriveHuleTileCommonFromWait(tazi3)
     expect(tiles3).toEqual([s7])
     expect(form3).toBe(waitForm.bianShang)
     // 嵌張待ち
     const tazi2 = GALAXY_RULE.makeTazi([s1, s3])
-    const [tiles2, form2] = GALAXY_RULE.deriveHuleTileCommon(tazi2)
+    const [tiles2, form2] = GALAXY_RULE.deriveHuleTileCommonFromWait(tazi2)
     expect(tiles2).toEqual([s2])
     expect(form2).toBe(waitForm.quianZhang)
     // 両面待ち
     const tazi4 = GALAXY_RULE.makeTazi([s2, s3])
-    const [tiles4, form4] = GALAXY_RULE.deriveHuleTileCommon(tazi4)
+    const [tiles4, form4] = GALAXY_RULE.deriveHuleTileCommonFromWait(tazi4)
     expect(tiles4).toEqual([s1, s4])
     expect(form4).toBe(waitForm.ligngMain)
     // 双椪待ち
     const duizi1 = GALAXY_RULE['takeDuizi']([e, e])[0][0]
     const duizi2 = GALAXY_RULE['takeDuizi']([s3, s3])[0][0]
-    const [tiles5, form5] = GALAXY_RULE.deriveHuleTileCommon([duizi1, duizi2])
+    const [tiles5, form5] = GALAXY_RULE.deriveHuleTileCommonFromWait([duizi1, duizi2])
     expect(tiles5).toContainEqual(e)
     expect(tiles5).toContainEqual(s3)
     expect(form5).toBe(waitForm.shuangPong)
     // 単騎待ち
     const guli1 = GALAXY_RULE['takeGuli'](s1)[0][0]
-    const [tile6, form6] = GALAXY_RULE.deriveHuleTileCommon([guli1])
+    const [tile6, form6] = GALAXY_RULE.deriveHuleTileCommonFromWait([guli1])
     expect(tile6).toEqual([s1])
     expect(form6).toBe(waitForm.danqi)
   })
