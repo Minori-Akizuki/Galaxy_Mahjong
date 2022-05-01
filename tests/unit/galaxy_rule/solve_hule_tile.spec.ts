@@ -1,5 +1,6 @@
 import { GalaxyMahjongRule } from '@/lib/mahjong/galaxy_rule'
 import { galaxyMianziToString, waitForm } from '@/lib/mahjong/mianzi'
+import { _ } from '@/lib/util/util'
 
 const GALAXY_RULE = GalaxyMahjongRule.getInstance()
 const parser = (str:string) => GALAXY_RULE.parser.parseTiles(str)
@@ -59,5 +60,23 @@ describe('通常形上がり牌探索', () => {
     })
     */
     expect(wait.length).toBe(8)
+  })
+
+  it('国士七対子総合判定', () => {
+    const hand = parser('9s1p9pg1wg9wgesgwngblghhg')
+    const wait = GALAXY_RULE.solveHuleTile(hand)
+    /*
+    wait.forEach(([mianzis, waitTile, _waitForm]) => {
+      console.log(
+        mianzis.map(m => galaxyMianziToString(m)).join(','),
+        waitTile.map(t => t.toString()).join(','),
+        waitForm[_waitForm])
+    })
+    */
+    const waitTiles = _.uniq(wait.map(([mianzi, tiles, form]) => tiles).flat(), (ta, tb) => GALAXY_RULE.compareTileByNumber(ta, tb))
+    expect(waitTiles.length).toBe(5)
+    parser('1s1w9p9w9s').forEach(w => {
+      expect(waitTiles).toContainEqual(w)
+    })
   })
 })
