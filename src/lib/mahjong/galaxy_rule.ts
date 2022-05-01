@@ -1,3 +1,4 @@
+import { toNumber } from '@vue/shared'
 import { _ } from '../util/util'
 import { GalaxyTileParser } from './galaxy_tile_parser'
 import { MahjongTile, TileColor } from './mahjong_tile'
@@ -52,13 +53,16 @@ export class GalaxyMahjongRule extends MahjongRule {
   public canBeSameTile (tile: MahjongTile, expect: MahjongTile):boolean {
     if (tile.option.isGalaxy || expect.option.isGalaxy) {
       // どちらか片方が銀河牌だった場合
-      switch (tile.color) {
+      const baseTile = tile.option.isGalaxy ? expect : tile
+      const targetTile = tile.option.isGalaxy ? tile : expect
+      switch (baseTile.color) {
+        // 銀河牌 *ではない* 方の色を基準に比べる
         case TileColor.feng:
           // 風牌だった場合は風牌かどうかだけ調べる
-          return expect.color === TileColor.feng
+          return targetTile.color === TileColor.feng
         case TileColor.sanyuan:
           // 三元牌だった場合は三元牌かどうかだけ調べる
-          return expect.color === TileColor.sanyuan
+          return targetTile.color === TileColor.sanyuan
         default: {
           // 数牌の場合は数字だけ比べる
           return tile.number === expect.number

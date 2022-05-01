@@ -18,6 +18,7 @@ npm run build
 ### Run your unit tests
 ```
 npm run test:unit
+npm run test:unit-cov
 ```
 
 ### Lints and fixes files

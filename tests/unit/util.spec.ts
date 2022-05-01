@@ -70,6 +70,8 @@ describe('ユーティリティテスト', () => {
   it('formation', () => {
     const formation = _.formation([[1, 2], [3, 4, 5], [6, 7]])
     expect(formation.length).toBe(12)
+    const formation2 = _.formation([[1], [3], [6]])
+    expect(formation2.length).toBe(1)
   })
 
   it('extract', () => {
@@ -96,5 +98,10 @@ describe('ユーティリティテスト', () => {
   it('isContained', () => {
     const arr = [1, 2, 3, 4]
     expect(_.isContained(arr, 1, (a, b) => a === b)).toBeTruthy()
+  })
+
+  it('uniq', () => {
+    const arr = [1, 3, 1, 6, 7, 3]
+    expect(_.uniq(arr, (a, b) => a - b).length).toBe(4)
   })
 })

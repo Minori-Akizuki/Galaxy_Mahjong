@@ -275,7 +275,33 @@ export class _ {
     return out
   }
 
+  /**
+   * 要素が配列に含まれているかどうかを判定する
+   * @param arr 配列
+   * @param a 要素
+   * @param equal 等価性
+   * @returns 含まれているか
+   */
   static isContained<T> (arr:T[], a:T, equal:(arg1:T, arg2:T) => boolean):boolean {
     return (!(arr.findIndex(x => equal(x, a)) === -1))
+  }
+
+  /**
+   * 配列から重複要素を除いた配列を生成する
+   * @param arr 配列
+   * @param compare 比較関数
+   * @returns ソートされ重複要素が除かれた配列
+   */
+  static uniq<T> (arr:T[], compare:(ta:T, tb:T) => number):T[] {
+    const ret = [...arr]
+    ret.sort(compare)
+    for (let index = 0; index < ret.length - 1;) {
+      if (compare(ret[index], ret[index + 1]) === 0) {
+        ret.splice(index, 1)
+      } else {
+        index++
+      }
+    }
+    return ret
   }
 }

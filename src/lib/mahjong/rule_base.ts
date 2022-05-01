@@ -165,6 +165,20 @@ export class MahjongRule {
   }
 
   /**
+   * 中身は問わず面子の種類だけ比較する。
+   * @param ma 面子
+   * @param mb 面子
+   * @return 比較結果
+   */
+  private compareMianziKind = (ma:IMianzi, mb:IMianzi):number => {
+    return (
+      ma.kind - mb.kind ||
+      ma.color - mb.color ||
+      ma.number - mb.number
+    )
+  }
+
+  /**
    * 手牌から n 枚で構成される面子/対子を抜き出した全てのパターンを返却する
    * @param number 抜き出す枚数、対子なら2枚、など
    * @param tiles 手牌
@@ -228,7 +242,7 @@ export class MahjongRule {
    * 手牌から可能な限り対子か面子か雀頭を取得し続け、取得可能なパターンを全て列挙する
    * @param intermediateHand 既に抜いてある面子/雀頭
    * @param takeXZi 面子を取るか雀頭を取るか
-   * @returns 取得可能な全ての手牌構成の列
+   * @returns 取得可能な全ての手牌構成の列と残りの手牌
    */
   protected takeRecursivelyXZi (
     intermediateHand:[IMianzi[], MahjongTile[]][], takeXZi:(tiles: MahjongTile[]) => [IMianzi, MahjongTile[]][]
@@ -308,7 +322,7 @@ export class MahjongRule {
   }
 
   /**
-   * 手牌から七対子の抽出を試みます
+   * 手牌から七対子の抽出を試みる
    * @param tiles 手牌
    * @returns 七対子が成立したらそのパターン
    */
@@ -335,11 +349,53 @@ export class MahjongRule {
   }
 
   /**
+   * 手牌から国士無双の抽出を試みる
+   * @param hand 手牌
+   * @returns 全て単騎として扱った牌の列
+   */
+  protected takeShisanyao (hand:MahjongTile[]): IMianzi[][] {
+    // 絶対に成立しない条件でガード節をつける
+    if (
+      hand.length !== 14 ||
+      !hand.every(t => (t.number === 9 || t.number === 1 || t.color === TileColor.feng || t.color === TileColor.sanyuan))
+    ) {
+      // 手牌が13枚無く、19字牌以外の牌がある
+      return []
+    }
+    const yaojiuPais = this.parser.parseTiles('1w9w1p9p1s9swsenblh')
+
+    // 全ての牌を単騎牌とした配列を生成する
+    let danqiss:IMianzi[][] = _.formation(hand.map(t => this.makeMianzi([t], false)))
+    // 同一扱いの牌が3枚以上あるパターンを排除する
+    danqiss = danqiss.filter((danqis:IMianzi[]) => _.uniq(danqis, (ma:IMianzi, mb:IMianzi) => this.compareMianziKind(ma, mb)).length > 11)
+
+    const ret:IMianzi[][] = []
+    danqiss.forEach(ds => {
+      // 単騎として扱われている牌を全て通常牌に戻す
+      const asHands = ds.map(d => new MahjongTile(d.color, d.number, {}))
+      // 么九牌との差分をとる
+      const missingTile = _.extractMultiple(yaojiuPais, asHands, (ta, tb) => this.canBeSameTile(ta, tb))
+      if (missingTile.length === 0) {
+        // 么九牌が全てあったら国士成立
+        ret.push(ds)
+      }
+    })
+    return ret
+  }
+
+  public solveHuleTile (hand:MahjongTile[]):[IMianzi[], MahjongTile[], waitForm][] {
+    return [
+      ...this.solveHuleTileCommoon(hand),
+      ...this.solveHuleTileExceptionalHand(hand)
+    ]
+  }
+
+  /**
    * 手牌から通常形の上がり形と上がり牌を算出する
    * @param hand 手牌
    * @returns [抽出された面子, 上がり牌, 待ち形]
    */
-  public solveHuleTileCommoon (hand:MahjongTile[]):[IMianzi[], MahjongTile[], waitForm][] {
+  protected solveHuleTileCommoon (hand:MahjongTile[]):[IMianzi[], MahjongTile[], waitForm][] {
     return [
       ...this.solveHuleTileCommonMianziFirst(hand),
       ...this.solveHuleTileCommonDuiziFirst(hand)
@@ -385,6 +441,11 @@ export class MahjongRule {
     return ret
   }
 
+  /**
+   * 対子優先で待ち牌の算出を行う
+   * @param hand 手牌
+   * @returns [面子構成, 待ち牌, 待ち形] の列
+   */
   protected solveHuleTileCommonDuiziFirst (hand:MahjongTile[]):[IMianzi[], MahjongTile[], waitForm][] {
     /**
      * 塔子をいままで抜いた面子にくっつける
@@ -418,6 +479,82 @@ export class MahjongRule {
     return ret
   }
 
+  /**
+   * 特殊形の待ち牌算出を試みる
+   * @param hand 手牌
+   * @returns [面子構成, 待ち牌, 待ち形] の列
+   */
+  protected solveHuleTileExceptionalHand (hand:MahjongTile[]):[IMianzi[], MahjongTile[], waitForm][] {
+    return [...this.solveHuleTileQiDuizi(hand), ...this.solveHuleTileShisanyao(hand)]
+  }
+
+  /**
+   * 手牌から七対子の待ち牌算出を試みる
+   * @param hand 手牌
+   * @returns [面子構成, 待ち牌, 待ち形] の列
+   */
+  protected solveHuleTileQiDuizi (hand:MahjongTile[]):[IMianzi[], MahjongTile[], waitForm][] {
+    if (hand.length !== 13) {
+      // 手牌が13枚でない時は即座に終了する
+      return []
+    }
+    // 手牌から対子をできるだけ抽出する
+    const ret:[IMianzi[], MahjongTile[], waitForm][] = []
+    const duizis = this.takeRecursivelyXZi([[[], hand]], (ts) => this.takeDuizi(ts))
+    duizis.forEach(([duizis, remaingTiles]) => {
+      if (remaingTiles.length === 1) {
+        ret.push(...this
+          .takeGuli(remaingTiles[0])
+          .map(([guli, none]):[IMianzi, [MahjongTile[], waitForm]] => [guli, this.deriveHuleTileCommonFromWait([guli])])
+          .map(([guli, [tiles, waitForm]]):[IMianzi[], MahjongTile[], waitForm] => [[...duizis, guli], tiles, waitForm])
+        )
+      }
+    })
+    return ret
+  }
+
+  /**
+   * 手牌から国士無双の待ち牌算出を試みる
+   * @param hand 手牌
+   * @return [手牌構成全て単騎扱い, 待ち牌, 待ち形(便宜的に単騎)] の列
+   */
+  protected solveHuleTileShisanyao (hand:MahjongTile[]):[IMianzi[], MahjongTile[], waitForm][] {
+    if (
+      hand.length !== 13 ||
+      !hand.every(t => (t.number === 9 || t.number === 1 || t.color === TileColor.feng || t.color === TileColor.sanyuan))
+    ) {
+      // 手牌が13枚無く、19字牌以外の牌がある
+      return []
+    }
+
+    // 么九牌の組
+    const yaojiuPais = this.parser.parseTiles('1w9w1p9p1s9seswnblh')
+
+    // 全ての牌を単騎牌とした配列を生成する
+    let danqiss:IMianzi[][] = _.formation(hand.map(t => this.makeMianzi([t], false)))
+    // 同一扱いの牌が3枚以上あるパターンを排除する
+    danqiss = danqiss.filter((danqis:IMianzi[]) => _.uniq(danqis, (ma:IMianzi, mb:IMianzi) => this.compareMianziKind(ma, mb)).length > 11)
+
+    const ret:[IMianzi[], MahjongTile[], waitForm][] = []
+    danqiss.forEach(ds => {
+      // 単騎として扱われている牌を全て通常牌に戻す
+      const asHands = ds.map(d => new MahjongTile(d.color, d.number, {}))
+      // 么九牌との差分をとる
+      const missingTile = _.extractMultiple(yaojiuPais, asHands, (ta, tb) => this.canBeSameTile(ta, tb))
+      if (missingTile.length === 1 || missingTile.length === 0) {
+        // 么九牌が全てあったら 13 面待ち
+        const waitTile = missingTile.length === 1 ? missingTile : yaojiuPais
+        ret.push([ds, waitTile, waitForm.danqi])
+      }
+    })
+    return ret
+  }
+
+  /**
+   * 塔子、双椪から待ちの種類と待ち牌を算出する
+   * @param ms 塔子1つか対子1つ
+   * @returns [待ち牌, 待ち形] の列
+   */
   public deriveHuleTileCommonFromWait (ms:IMianzi[]):[MahjongTile[], waitForm] {
     if (ms.length === 2 && ms[0].kind === MianziKind.duizi && ms[1].kind === MianziKind.duizi) {
       // 双椪
@@ -455,43 +592,6 @@ export class MahjongRule {
       ]
     }
     throw Error('deriveHuleTileCommon: Illigal wait form')
-  }
-
-  /**
-   * 手牌から国士無双の抽出を試みます
-   * @param tiles 手牌
-   * @returns 国士無双が成立すればそのパターン
-   */
-  protected takeShisanyao (tiles:MahjongTile[]): IMianzi[][] {
-    const hands:[IMianzi[], MahjongTile][] = []
-    const yaojiuPais = this.parser.parseTiles('1w9w1p9p1s9swsenblh')
-    // 手牌から1牌だけ抽出したパターンを列挙する
-    const candidateRemaingHand = _.extractAllOne(tiles)
-    candidateRemaingHand.forEach(([r, hs]) => {
-      // 残った牌に対して么九牌全ての抜き出しを試みる
-      const extracted = _.extractMultiple(
-        hs.sort((ta, tb) => this.compareTileByColor(ta, tb)), // ソートされた牌は銀河牌が後にくるので先に銀河牌が抽出される事は無いはず
-        yaojiuPais,
-        (ta, tb) => this.canBeSameTile(ta, tb)
-      )
-      if (
-        extracted.length === 0 && // 么九牌が全て抜き出せて
-        yaojiuPais.findIndex(t => this.canBeSameTile(t, r)) !== -1 && // 残った牌も么九牌
-        hands.every((cr) => !deepEqual(cr[1], r)) // 既に抜き出したやつと同じ牌が余ってない
-      ) {
-        hands.push([
-          [{
-            tiles,
-            kind: MianziKind.shisanyao,
-            number: 1,
-            color: TileColor.wanzi,
-            isOpend: false
-          }],
-          r
-        ])
-      }
-    })
-    return hands.map(r => r[0])
   }
 
   /**

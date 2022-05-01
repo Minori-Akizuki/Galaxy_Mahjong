@@ -2,7 +2,7 @@
 // private method のテストをしているため dot-notation はオフにしておく
 
 import { GalaxyMahjongRule } from '@/lib/mahjong/galaxy_rule'
-import { MianziKind } from '@/lib/mahjong/mianzi'
+import { galaxyMianziToString, MianziKind } from '@/lib/mahjong/mianzi'
 
 const GALAXY_RULE = GalaxyMahjongRule['getInstanceAsGalaxyRule']()
 const parseTiles = (str:string) => GALAXY_RULE.parser.parseTiles(str)
@@ -101,9 +101,7 @@ describe('手牌からの抜き出し', () => {
   it('国士無双判定/通常牌', () => {
     const hand1 = GALAXY_RULE['solveExceptionalHand'](parseTiles('1w9w1p9p1s9swwsenblh'))
     expect(hand1.length).toBe(1)
-    expect(hand1[0][0]).toMatchObject({
-      kind: MianziKind.shisanyao
-    })
+    expect(hand1[0].length).toBe(14)
   })
 
   it('国士無双判定/銀河牌', () => {
@@ -115,7 +113,7 @@ describe('手牌からの抜き出し', () => {
       console.log(ms.map(m => galaxyMianziToString(m)).join(','))
     })
     */
-    expect(hand1.length).toBe(5)
+    expect(hand1.length).toBe(7)
   })
 
   it('上がり形総合判定', () => {
