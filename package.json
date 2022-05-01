@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve",
+    "serve": "cross-env NODE_OPTIONS=--openssl-legacy-provider vue-cli-service serve",
     "build": "vue-cli-service build",
     "test:unit": "vue-cli-service test:unit",
     "test:unit-cov": "vue-cli-service test:unit --coverage --verbose",
@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "core-js": "^3.6.5",
+    "cross-env": "^7.0.3",
     "deep-equal": "^2.0.5",
     "vue": "^3.0.0",
     "vue-class-component": "^8.0.0-0"
