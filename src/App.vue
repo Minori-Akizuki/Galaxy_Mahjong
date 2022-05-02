@@ -1,18 +1,28 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
+  <galaxy-mahjong />
 </template>
 
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component'
-import HelloWorld from './components/HelloWorld.vue'
+import { useStore } from './store/store'
+import { MahjongTile, TileColor } from './lib/mahjong'
+import { MUTATION } from './store/mutationType'
+
+import GalaxyMahjong from './components/galaxy_mahjong/galaxy_mahjong.vue'
 
 @Options({
   components: {
-    HelloWorld
+    GalaxyMahjong
   }
 })
-export default class App extends Vue {}
+export default class App extends Vue {
+  tile!:MahjongTile
+  created ():void {
+    this.tile = new MahjongTile(TileColor.siozi, 5, { isRed: true })
+    const store = useStore()
+    store.commit(MUTATION.setNumber, 0)
+  }
+}
 </script>
 
 <style>
