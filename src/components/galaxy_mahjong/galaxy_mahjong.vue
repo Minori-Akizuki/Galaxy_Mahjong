@@ -1,9 +1,11 @@
 <template>
   <div>
     <h1>銀河麻雀</h1>
-    <solve-hand-button/>
-    <solve-hule-tile-button/>
-    <hand-display/>
+    <div class="solve-button">
+      <solve-hand-button/>
+      <solve-hule-tile-button/>
+    </div>
+    <hand-display class="mahjong-hand"/>
     <pickup-tile-area/>
   </div>
 </template>
@@ -25,5 +27,19 @@ import PickupTileArea from './pickup_tile_area.vue'
   }
 })
 export default class GalaxyMahjong extends Vue {
+  created ():void {
+    // TODO: impliment
+  }
 }
 </script>
+<style>
+.mahjong-hand {
+  justify-content: center;
+  display: flex;
+}
+
+.solve-button {
+  justify-content: center;
+  display: flex;
+}
+</style>

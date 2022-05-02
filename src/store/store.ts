@@ -1,5 +1,5 @@
 // store.ts
-import { IMianzi, MahjongRule, MahjongTile } from '@/lib/mahjong'
+import { IMianzi, MahjongTile } from '@/lib/mahjong'
 import { InjectionKey } from 'vue'
 import { createStore, Store, useStore as baseUseStore } from 'vuex'
 import { MUTATION } from './mutationType'
@@ -9,7 +9,6 @@ export interface State {
   count: number
   mahjongHands: MahjongTile[]
   opendMianzis: IMianzi[]
-  mahjongRule: MahjongRule | null
 }
 
 // インジェクションキーを定義します
@@ -19,8 +18,7 @@ export const store = createStore<State>({
   state: {
     count: 0,
     mahjongHands: [],
-    opendMianzis: [],
-    mahjongRule: null
+    opendMianzis: []
   },
   mutations: {
     [MUTATION.countUp] (state) {
@@ -31,14 +29,6 @@ export const store = createStore<State>({
     },
     [MUTATION.setNumber] (state, num:number) {
       state.count = num
-    },
-    /**
-     * ルールを格納する
-     * @param state ステート
-     * @param rule ルール
-     */
-    [MUTATION.setMahjongRule] (state, rule:MahjongRule) {
-      state.mahjongRule = rule
     }
   }
 })

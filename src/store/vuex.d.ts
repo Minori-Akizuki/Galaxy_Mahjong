@@ -1,4 +1,4 @@
-import { IMianzi, MahjongRule, MahjongTile } from '@/lib/mahjong'
+import { IMianzi, MahjongTile } from '@/lib/mahjong'
 import { ComponentCustomProperties } from 'vue'
 import { Store } from 'vuex'
 
@@ -7,8 +7,7 @@ declare module '@vue/runtime-core' {
   interface State {
     count: number
     mahjongHands: MahjongTile[]
-    opendMianzis: IMianzi[],
-    mahjongRule: MahjongRule
+    opendMianzis: IMianzi[]
   }
 
   // `this.$store` の型付けを提供する
