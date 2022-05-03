@@ -126,6 +126,11 @@ export default class PickupTileArea extends Vue {
       this.showAlert = true
       return
     }
+    if (handTile.length >= 13) {
+      this.alertMessage = '手牌が13枚いっぱいです'
+      this.showAlert = true
+      return
+    }
     this.store.commit(MUTATION.addTileToHand, tile)
   }
 
