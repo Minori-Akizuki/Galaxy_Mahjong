@@ -3,6 +3,7 @@
     <h1>銀河麻雀</h1>
     <p>- Galaxy Mahjong - (β)</p>
     <p style="color:dodgerblue">Be Mahjalien you TOO!</p>
+    <p>◆上がり牌検索結果は牌一覧のさらに下に表示されます</p>
     <div>
       <solve-hand-button/>
       <solve-hule-tile-button/>
@@ -15,6 +16,7 @@
     <ul>
       <li>元ネタ: <a href="https://youtu.be/IDaKM7eU7zE" target="_blank">麻雀星人からの挑戦状!?銀河麻雀！</a></li>
       <li>牌画像: <a href="https://majandofu.com/mahjong-images" target="_blank">豆腐麻雀</a></li>
+      <li>ページ作者 : <a href="https://twitter.com/Real_analysis">じつかいせき</a></li>
     </ul>
   </div>
 </template>
