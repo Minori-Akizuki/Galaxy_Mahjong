@@ -7,11 +7,15 @@
       </div>
     </div>
     <hr />
-    <div class="row">
+    <div>
       <div v-for="hulePattern in solvedHuleTiles" :key="hulePattern[3]">
-        <display-mianzi v-for="(mianzi, idx) in hulePattern[0]" :key="idx" :mianzi="() => mianzi" small showColor/>
-        <tile-image v-for="(tile, idxT) in hulePattern[1]" :key="idxT" :tile="tile" small />
-        {{ formStrings[hulePattern[2]] }}
+        <div class="row row-cols-auto">
+          <display-mianzi v-for="(mianzi, idx) in hulePattern[0]" :key="idx" :mianzi="() => mianzi" small showColor class="col"/>
+          <span class="col">
+            <tile-image v-for="(tile, idxT) in hulePattern[1]" :key="idxT" :tile="tile" small />
+            {{ formStrings[hulePattern[2]] }}
+          </span>
+        </div>
         <hr />
       </div>
     </div>
