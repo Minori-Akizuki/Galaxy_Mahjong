@@ -3,6 +3,8 @@
     <h1>銀河麻雀</h1>
     <p>- Galaxy Mahjong - (β)</p>
     <p style="color:dodgerblue">Be Mahjalien you TOO!</p>
+    <p>◆下の牌一覧をクリック(タップ)して手牌を追加できます</p>
+    <p>◆上の牌をクリック(タップ)すると削除できます</p>
     <p>◆上がり牌検索結果は牌一覧のさらに下に表示されます</p>
     <div>
       <solve-hand-button/>
