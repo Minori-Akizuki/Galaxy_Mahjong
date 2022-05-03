@@ -1,6 +1,6 @@
 <template>
     <div class="row">
-      <div class="col select-hand-or-hulu">
+      <div class="col-12 col-xl-4 select-hand-or-hulu">
         <div class="form-check">
           <input
             type="radio"
@@ -14,7 +14,7 @@
           <label class="form-check-label" for="selectHandOrHulu">手牌を選択する</label>
         </div>
       </div>
-      <div class="col select-hand-or-hulu">
+      <div class="col-12 col-xl-4 select-hand-or-hulu">
         <div class="form-check">
           <input
             class="form-check-input"
@@ -28,7 +28,7 @@
           <label class="form-check-label" for="selectHandOrHulu">副露を作成する (明槓できるモード)</label>
         </div>
       </div>
-      <div class="col select-hand-or-hulu">
+      <div class="col-12 col-xl-4 select-hand-or-hulu">
         <div class="form-check">
           <input
             class="form-check-input"
