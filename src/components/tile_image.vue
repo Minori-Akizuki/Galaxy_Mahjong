@@ -12,30 +12,40 @@ import { Options, Vue } from 'vue-class-component'
   props: {
     tile: {
       type: MahjongTile,
-      required: true
+      required: false,
+      default: null
     },
-    small!: {
+    small: {
       type: Boolean,
       default: false
     },
-    side!: {
+    side: {
+      type: Boolean,
+      default: false
+    },
+    back: {
       type: Boolean,
       default: false
     }
   }
 })
 export default class TileImage extends Vue {
-  tile!: MahjongTile
+  tile!: MahjongTile | null
   small!:boolean
   side!:boolean
   imageName!: string
+  back!: boolean
   created ():void {
-    const tileColor = this.tile.color
-    const tileNumber = this.tile.number
-    const optionStr = (this.tile.option.isGalaxy ? '-g' : '') + (this.tile.option.isRed ? '-r' : '')
     const sizeStr = this.small ? '-s' : '-l'
     const sideStr = this.side ? '-yoko' : ''
-    this.imageName = TileColor[tileColor] + tileNumber + optionStr + sizeStr + sideStr + '.png'
+    if (this.tile && !this.back) {
+      const tileColor = this.tile.color
+      const tileNumber = this.tile.number
+      const optionStr = (this.tile.option.isGalaxy ? '-g' : '') + (this.tile.option.isRed ? '-r' : '')
+      this.imageName = TileColor[tileColor] + tileNumber + optionStr + sizeStr + sideStr + '.png'
+    } else {
+      this.imageName = 'back' + sizeStr + sideStr + '.png'
+    }
   }
 }
 </script>
