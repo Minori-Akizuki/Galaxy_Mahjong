@@ -10,6 +10,4 @@ jobs:
   notice:
     runs-on: ubuntu-latest
     steps:
-      - run: |
-        curl -X POST -H 'Content-type: application/json' --data '{"text":"Hello, World!
-        :github: "}' https://hooks.slack.com/services/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
+      - run: "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"Hello, World! :github: \"}' https://hooks.slack.com/services/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"
