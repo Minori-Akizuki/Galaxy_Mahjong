@@ -8,6 +8,9 @@
     >
       上がり牌を検索する
     </button>
+    <div v-if="isSolving" class="spinner-border-sm spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
   </div>
 </template>
 
@@ -18,12 +21,15 @@ import { State } from '@vue/runtime-core'
 import { useStore } from '@/store/store'
 import { MUTATION } from '@/store/mutationType'
 
+const worker = new Worker(new URL('../../workers/solve_hule_tile.worker.ts', import.meta.url))
+
 @Options({
   components: {
   }
 })
 export default class SolveHuleTileButton extends Vue {
   store!:Store<State>
+  isSolving = false
 
   created ():void {
     this.store = useStore()
@@ -35,12 +41,21 @@ export default class SolveHuleTileButton extends Vue {
   }
 
   public solveWaitTiles ():void {
+    this.isSolving = true
     const tiles = this.store.state.mahjongHands.map(([t, n]) => t)
-    const waitPatterns = this.store.state.rule.solveHuleTile(tiles)
-    if (waitPatterns.length === 0) {
-      window.alert('テンパイしてませんでした')
-    }
-    this.store.commit(MUTATION.setSolvedHulePatterns, waitPatterns)
+
+    // リスナー
+    worker.addEventListener('message', (ev) => {
+      // TODO: 型情報が失われているので危険
+      const waitPatterns = ev.data
+      if (waitPatterns.length === 0) {
+        window.alert('テンパイしてませんでした')
+      }
+      this.store.commit(MUTATION.setSolvedHulePatterns, waitPatterns)
+      this.isSolving = false
+    })
+
+    worker.postMessage(JSON.stringify(tiles))
   }
 }
 </script>
