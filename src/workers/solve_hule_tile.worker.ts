@@ -8,5 +8,4 @@ solveHuleTileWorker.addEventListener('message', (ev) => {
   const tiles: MahjongTile[] = JSON.parse(ev.data)
   const waitPatterns = rule.solveHuleTile(tiles)
   solveHuleTileWorker.postMessage(waitPatterns)
-  solveHuleTileWorker.close()
 })
