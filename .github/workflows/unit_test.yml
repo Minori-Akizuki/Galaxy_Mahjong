@@ -1,10 +1,9 @@
 # This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
-name: Node.js CI
+name: Node.js unit test
 
-on:
-  push:
+on: push
 
 jobs:
   build:
@@ -23,4 +22,5 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+    - run: npm install
     - run: npm run test:unit
