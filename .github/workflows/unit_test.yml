@@ -3,10 +3,16 @@
 
 name: Node.js unit test
 
-on: push
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  build:
+  unit-test:
 
     runs-on: ubuntu-latest
 
