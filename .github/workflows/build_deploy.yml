@@ -5,8 +5,8 @@ name: Node.js build and deploy
 
 on:
   push:
-    branches:
-      - tags
+    tags:
+      - "v**"
 
 jobs:
   build:
