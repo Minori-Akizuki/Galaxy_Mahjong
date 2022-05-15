@@ -34,6 +34,10 @@ jobs:
     needs: unit-test
     runs-on: ubuntu-latest
     steps:
+    - name: Extract branch name
+      shell: bash
+      run: echo "::set-output name=branch::${GITHUB_REF#refs/heads/}"
+      id: extract_branch
     - name: Post to a Slack channel
       id: slack
       uses: slackapi/slack-github-action@v1.19.0
@@ -42,6 +46,6 @@ jobs:
         # See also: https://api.slack.com/methods/chat.postMessage#channels
         channel-id: 'github-notice'
         # For posting a simple plain text message
-        slack-message: "銀河麻雀:UT ${{ needs.build.result }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+        slack-message: "銀河麻雀:UT [ ${{ steps.extract_branch.outputs.branch }} ] ${{ needs.unit-test.result }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
       env:
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
