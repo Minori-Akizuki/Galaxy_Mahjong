@@ -24,3 +24,6 @@ pnpm-debug.log*
 
 # coverage
 /coverage
+
+#Electron-builder output
+/dist_electron
