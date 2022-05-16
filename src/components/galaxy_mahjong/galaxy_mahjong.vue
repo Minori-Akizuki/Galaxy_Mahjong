@@ -24,7 +24,8 @@
     <ul>
       <li>元ネタ: <a href="https://youtu.be/IDaKM7eU7zE" target="_blank">麻雀星人からの挑戦状!?銀河麻雀！</a></li>
       <li>牌画像: <a href="https://majandofu.com/mahjong-images" target="_blank">豆腐麻雀</a></li>
-      <li>ページ作者 : <a href="https://twitter.com/Real_analysis">じつかいせき</a></li>
+      <li>ページ作者: <a href="https://twitter.com/Real_analysis">じつかいせき</a></li>
+      <li>リポジトリ: <a href="https://github.com/Minori-Akizuki/Galaxy_Mahjong">こちら</a></li>
     </ul>
   </div>
 </template>
