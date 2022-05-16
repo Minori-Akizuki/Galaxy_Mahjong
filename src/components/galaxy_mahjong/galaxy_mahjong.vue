@@ -2,7 +2,10 @@
   <div>
     <h1>銀河麻雀</h1>
     <p>- Galaxy Mahjong - (β)</p>
-    <p style="color:dodgerblue">Be Mahjalien you TOO!</p>
+    <p style="color:dodgerblue">
+      Be Mahjalien you TOO!
+      <a :href="tweetButtonUrl" target="_blank"><img src="@/assets/twitter.png" /></a>
+    </p>
     <div class="readme">
       <p>◆下の牌一覧をクリック(タップ)して手牌を追加できます</p>
       <p>◆上の牌をクリック(タップ)すると削除できます</p>
@@ -51,9 +54,22 @@ import SolvedHandView from './solved_hand_view.vue'
 })
 export default class GalaxyMahjong extends Vue {
   store!: Store<State>
+  tweetButtonUrl!:string
   created ():void {
     this.store = useStore()
     this.store.commit(MUTATION.setMahjongRule, GalaxyMahjongRule.getInstance())
+    this.tweetButtonUrl = this.createTweetButtonUrl()
+  }
+
+  public createTweetButtonUrl () {
+    const params = {
+      text: '銀河麻雀 -君も麻雀星人になろう！-',
+      url: 'https://minori-akizuki.github.io/Galaxy_Mahjong/',
+      hashtags: '銀河麻雀'
+    }
+    const url = 'https://twitter.com/intent/tweet?'
+    const urlParam = new URLSearchParams(params).toString()
+    return url + urlParam
   }
 }
 </script>
