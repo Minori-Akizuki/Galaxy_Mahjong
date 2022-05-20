@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1>銀河麻雀</h1>
+    <h1>銀河麻雀 上がり牌判定サイト</h1>
     <p>- Galaxy Mahjong - (β)</p>
     <p style="color:dodgerblue">
       Be Mahjalien you TOO!
