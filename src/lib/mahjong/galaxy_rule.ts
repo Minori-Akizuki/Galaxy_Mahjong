@@ -64,8 +64,15 @@ export class GalaxyMahjongRule extends MahjongRule {
           // 三元牌だった場合は三元牌かどうかだけ調べる
           return targetTile.color === TileColor.sanyuan
         default: {
-          // 数牌の場合は数字だけ比べる
-          return tile.number === expect.number
+          // 非銀河側が数牌の場合。
+          // 銀河側(targetTile)も数牌(風でも三元でもない)である事を併せて確認する。
+          // 風牌・三元牌は内部 number を持つ(北=4 等)ため、数字だけ比べると
+          // 字牌と同番号の数牌が誤って同一視されてしまう(#34)。
+          return (
+            targetTile.color !== TileColor.feng &&
+            targetTile.color !== TileColor.sanyuan &&
+            tile.number === expect.number
+          )
         }
       }
     }
